@@ -37,11 +37,18 @@ HistoricalOrderImbalanceChartView::HistoricalOrderImbalanceChartView(
 }
 
 void HistoricalOrderImbalanceChartView::leaveEvent(QEvent* event) {
-  m_mouse_pos = QPoint();
+  m_crosshair_pos = boost::none;
 }
 
 void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
-  m_mouse_pos = event->pos();
+  if(QRect(LEFT_MARGIN(), 0, m_chart_size.width(), m_chart_size.height())
+      .contains(event->pos())) {
+    m_crosshair_pos = event->pos();
+    setCursor(CROSSHAIR_CURSOR());
+  } else {
+    m_crosshair_pos = boost::none;
+    setCursor(Qt::ArrowCursor);
+  }
   update();
 }
 
@@ -53,16 +60,12 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     m_chart_size.height());
   painter.drawLine(LEFT_MARGIN(), m_chart_size.height(), width(),
     m_chart_size.height());
-  if(QRect(LEFT_MARGIN(), 0, m_chart_size.width(), m_chart_size.height())
-      .contains(m_mouse_pos)) {
-    setCursor(CROSSHAIR_CURSOR());
+  if(m_crosshair_pos) {
     painter.setPen(m_dashed_line_pen);
-    painter.drawLine(LEFT_MARGIN(), m_mouse_pos.y(), width(),
-      m_mouse_pos.y());
-    painter.drawLine(m_mouse_pos.x(), 0, m_mouse_pos.x(),
+    painter.drawLine(LEFT_MARGIN(), m_crosshair_pos->y(), width(),
+      m_crosshair_pos->y());
+    painter.drawLine(m_crosshair_pos->x(), 0, m_crosshair_pos->x(),
       m_chart_size.height());
-  } else {
-    setCursor(Qt::ArrowCursor);
   }
 }
 
