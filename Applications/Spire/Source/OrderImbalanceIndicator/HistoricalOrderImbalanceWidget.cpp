@@ -2,6 +2,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QVBoxLayout>
+#include "Spire/OrderImbalanceIndicator/HistoricalOrderImbalanceChartView.hpp"
 #include "Spire/Spire/Dimensions.hpp"
 #include "Spire/Ui/DropDownMenu.hpp"
 
@@ -33,7 +34,7 @@ HistoricalOrderImbalanceWidget::HistoricalOrderImbalanceWidget(
   dropdown_layout->addWidget(m_data_dropdown);
   dropdown_layout->addStretch(1);
   layout->addSpacing(scale_height(8));
-  m_chart_widget = new QWidget(this);
+  m_chart_widget = new HistoricalOrderImbalanceChartView(nullptr, this);
   m_chart_widget->setFixedHeight(scale_height(185));
   layout->addWidget(m_chart_widget);
 }
