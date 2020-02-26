@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include "Spire/Spire/Dimensions.hpp"
+#include "Spire/Ui/Ui.hpp"
 
 using namespace Spire;
 
@@ -13,6 +14,13 @@ namespace {
 
   auto LEFT_MARGIN() {
     return scale_width(31);
+  }
+
+  const auto& CROSSHAIR_CURSOR() {
+    // TODO: replace with proper cursor file
+    static auto cursor = QCursor(QPixmap::fromImage(
+      imageFromSvg(":/Icons/chart-cursor.svg", scale(18, 18))));
+    return cursor;
   }
 }
 
@@ -47,11 +55,14 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     m_chart_size.height());
   if(QRect(LEFT_MARGIN(), 0, m_chart_size.width(), m_chart_size.height())
       .contains(m_mouse_pos)) {
+    setCursor(CROSSHAIR_CURSOR());
     painter.setPen(m_dashed_line_pen);
     painter.drawLine(LEFT_MARGIN(), m_mouse_pos.y(), width(),
       m_mouse_pos.y());
     painter.drawLine(m_mouse_pos.x(), 0, m_mouse_pos.x(),
       m_chart_size.height());
+  } else {
+    setCursor(Qt::ArrowCursor);
   }
 }
 
