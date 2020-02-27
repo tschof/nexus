@@ -77,8 +77,8 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
   gradient.setColorAt(0, QColor("#E2E0FF"));
   gradient.setColorAt(1, Qt::white);
   painter.fillRect(LEFT_MARGIN() + CHART_PADDING(), 0,
-    m_chart_size.width() - (2 * CHART_PADDING()), m_chart_size.height(),
-    gradient);
+    m_chart_size.width() - (2 * CHART_PADDING()),
+    m_chart_size.height() - scale_height(1), gradient);
   if(m_crosshair_pos) {
     painter.save();
     painter.setPen(m_dashed_line_pen);
@@ -135,7 +135,7 @@ void HistoricalOrderImbalanceChartView::on_data_loaded(
     auto y = map_to(m_imbalances[i].m_size,
       static_cast<Nexus::Quantity>(m_minimum_value),
       static_cast<Nexus::Quantity>(m_maximum_value),
-      0 + scale_height(5), m_chart_size.height() - scale_height(5));
+      0 + scale_height(5), m_chart_size.height() - scale_height(8));
     m_data_points.push_back({x, y});
   }
 }
