@@ -4,6 +4,7 @@
 #include <QWidget>
 #include "Nexus/Definitions/OrderImbalance.hpp"
 #include "Spire/OrderImbalanceIndicator/OrderImbalanceIndicator.hpp"
+#include "Spire/Spire/QtPromise.hpp"
 
 namespace Spire {
 
@@ -26,6 +27,7 @@ namespace Spire {
       boost::optional<QPoint> m_crosshair_pos;
       QSize m_chart_size;
       QPen m_dashed_line_pen;
+      QtPromise<std::vector<Nexus::OrderImbalance>> m_load_promise;
   };
 }
 

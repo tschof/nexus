@@ -11,9 +11,8 @@ using namespace Spire;
 #include "Nexus/Definitions/OrderImbalance.hpp"
 #include "Nexus/Definitions/Side.hpp"
 
-auto rand = std::default_random_engine(std::random_device()());
-
 auto make(boost::posix_time::ptime time) {
+  auto rand = std::default_random_engine(std::random_device()());
   return Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
     Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100), time);
 }
