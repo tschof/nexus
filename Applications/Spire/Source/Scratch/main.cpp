@@ -10,6 +10,7 @@ using namespace Spire;
 #include "Nexus/Definitions/Security.hpp"
 #include "Nexus/Definitions/OrderImbalance.hpp"
 #include "Nexus/Definitions/Side.hpp"
+#include "Spire/Spire/Intervals.hpp"
 
 auto make(boost::posix_time::ptime time) {
   auto rand = std::default_random_engine(std::random_device()());
@@ -32,7 +33,9 @@ int main(int argc, char** argv) {
   application->setOrganizationName(QObject::tr("Eidolon Systems Ltd"));
   application->setApplicationName(QObject::tr("Scratch"));
   initialize_resources();
-  auto widget = new HistoricalOrderImbalanceWidget(test_model());
+  auto time = boost::posix_time::ptime({2005, 10, 10});
+  auto widget = new HistoricalOrderImbalanceWidget(TimeInterval(time,
+    time + boost::posix_time::hours(100)), test_model());
   widget->setFixedSize(scale(700, 255));
   widget->show();
   application->exec();
