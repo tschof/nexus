@@ -9,7 +9,9 @@ namespace Spire {
   class HistoricalOrderImbalanceWidget : public QWidget {
     public:
 
-      HistoricalOrderImbalanceWidget(QWidget* parent = nullptr);
+      HistoricalOrderImbalanceWidget(
+        std::shared_ptr<OrderImbalanceIndicatorModel> model,
+        QWidget* parent = nullptr);
 
     private:
       DropDownMenu* m_data_dropdown;

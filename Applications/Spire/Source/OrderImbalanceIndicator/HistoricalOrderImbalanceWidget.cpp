@@ -9,7 +9,7 @@
 using namespace Spire;
 
 HistoricalOrderImbalanceWidget::HistoricalOrderImbalanceWidget(
-    QWidget* parent)
+    std::shared_ptr<OrderImbalanceIndicatorModel> model, QWidget* parent)
     : QWidget(parent) {
   setStyleSheet("background-color: #FFFFFF;");
   auto layout = new QVBoxLayout(this);
@@ -34,7 +34,7 @@ HistoricalOrderImbalanceWidget::HistoricalOrderImbalanceWidget(
   dropdown_layout->addWidget(m_data_dropdown);
   dropdown_layout->addStretch(1);
   layout->addSpacing(scale_height(8));
-  m_chart_widget = new HistoricalOrderImbalanceChartView(nullptr, this);
+  m_chart_widget = new HistoricalOrderImbalanceChartView(model, this);
   m_chart_widget->setFixedHeight(scale_height(185));
   layout->addWidget(m_chart_widget);
 }

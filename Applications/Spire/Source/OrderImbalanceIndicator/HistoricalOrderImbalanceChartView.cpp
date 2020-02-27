@@ -2,6 +2,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPaintEvent>
+#include "Spire/OrderImbalanceIndicator/OrderImbalanceIndicatorModel.hpp"
 #include "Spire/Spire/Dimensions.hpp"
 #include "Spire/Ui/Ui.hpp"
 
