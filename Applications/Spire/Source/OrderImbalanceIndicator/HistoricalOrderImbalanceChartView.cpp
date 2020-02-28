@@ -192,35 +192,35 @@ void HistoricalOrderImbalanceChartView::on_data_loaded(
     auto rand = std::default_random_engine(std::random_device()());
     m_imbalances.emplace_back(
       Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
-      Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100),
+      Nexus::Quantity(1), Nexus::Money(rand() % 100),
       boost::posix_time::ptime({2005, 9, 1})));
     m_imbalances.emplace_back(
       Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
-      Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100),
+      Nexus::Quantity(10), Nexus::Money(rand() % 100),
       boost::posix_time::ptime({2005, 9, 1}, boost::posix_time::hours(12))));
     m_imbalances.emplace_back(
       Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
-      Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100),
+      Nexus::Quantity(20), Nexus::Money(rand() % 100),
       boost::posix_time::ptime({2005, 9, 2})));
     m_imbalances.emplace_back(
       Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
-      Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100),
+      Nexus::Quantity(30), Nexus::Money(rand() % 100),
       boost::posix_time::ptime({2005, 9, 2}, boost::posix_time::hours(12))));
     m_imbalances.emplace_back(
       Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
-      Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100),
+      Nexus::Quantity(40), Nexus::Money(rand() % 100),
       boost::posix_time::ptime({2005, 9, 3})));
     m_imbalances.emplace_back(
       Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
-      Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100),
+      Nexus::Quantity(50), Nexus::Money(rand() % 100),
       boost::posix_time::ptime({2005, 9, 3}, boost::posix_time::hours(12))));
     m_imbalances.emplace_back(
       Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
-      Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100),
+      Nexus::Quantity(60), Nexus::Money(rand() % 100),
       boost::posix_time::ptime({2005, 9, 4})));
     m_imbalances.emplace_back(
       Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
-      Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100),
+      Nexus::Quantity(70), Nexus::Money(rand() % 100),
       boost::posix_time::ptime({2005, 9, 4}, boost::posix_time::hours(12))));
   }
   for(auto& imbalance : m_imbalances) {
@@ -255,8 +255,8 @@ void HistoricalOrderImbalanceChartView::on_data_loaded(
       static_cast<int>(static_cast<double>(chart_drawable_width) /
       static_cast<double>(data_point_count - 1) * static_cast<double>(i));
     auto y = map_to(m_imbalances[i].m_size,
-      static_cast<Nexus::Quantity>(m_minimum_value),
       static_cast<Nexus::Quantity>(m_maximum_value),
+      static_cast<Nexus::Quantity>(m_minimum_value),
       0 + scale_height(5), m_chart_size.height() - scale_height(8));
     m_data_points.push_back({x, y});
     //qDebug() << "size: " << static_cast<int>(m_imbalances[i].m_size);
