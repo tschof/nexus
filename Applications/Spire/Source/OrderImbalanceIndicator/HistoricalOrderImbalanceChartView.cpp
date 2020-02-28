@@ -4,6 +4,7 @@
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPaintEvent>
+#include <QWheelEvent>
 #include "Spire/OrderImbalanceIndicator/OrderImbalanceIndicatorModel.hpp"
 #include "Spire/Spire/Dimensions.hpp"
 #include "Spire/Spire/Utility.hpp"
@@ -40,6 +41,7 @@ HistoricalOrderImbalanceChartView::HistoricalOrderImbalanceChartView(
       m_minimum_value(std::numeric_limits<Nexus::Quantity>::max()),
       m_maximum_value(0),
       m_model(std::move(model)),
+      m_is_dragging(false),
       m_dashed_line_pen(QColor("#333333"), scale_width(1),
         Qt::CustomDashLine) {
   setAttribute(Qt::WA_Hover);
@@ -61,7 +63,36 @@ void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
     m_crosshair_pos = boost::none;
     setCursor(Qt::ArrowCursor);
   }
+  if(m_is_dragging) {
+    auto pixel_delta = static_cast<int>(
+      static_cast<double>(event->x() - m_last_mouse_pos.x()) /
+      static_cast<double>(m_chart_size.width()) * 100);
+    if(pixel_delta != 0) {
+      auto chart_delta = (m_interval.upper() - m_interval.lower()) / pixel_delta;
+      if(event->x() < m_last_mouse_pos.x()) {
+        m_interval = {m_interval.lower() - chart_delta,
+          m_interval.upper() - chart_delta};
+      } else {
+        m_interval = {m_interval.lower() + chart_delta,
+          m_interval.upper() + chart_delta};
+      }
+      on_data_loaded({});
+    }
+  }
   update();
+}
+
+void HistoricalOrderImbalanceChartView::mousePressEvent(QMouseEvent* event) {
+  if(event->button() == Qt::LeftButton) {
+    m_is_dragging = true;
+    m_last_mouse_pos = event->pos();
+  }
+}
+
+void HistoricalOrderImbalanceChartView::mouseReleaseEvent(QMouseEvent* event) {
+  if(event->button() == Qt::LeftButton) {
+    m_is_dragging = false;
+  }
 }
 
 void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
@@ -111,27 +142,74 @@ void HistoricalOrderImbalanceChartView::resizeEvent(QResizeEvent* event) {
   m_chart_size.setHeight(height() - BOTTOM_MARGIN());
 }
 
+void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
+  auto chart_range = m_interval.upper() - m_interval.lower();
+  if(event->angleDelta().y() < 0) {
+    qDebug() << "********************************";
+    qDebug() << "int";
+    qDebug() << "********************************";
+    //qDebug() << "before";
+    qDebug() << "range: " << (m_interval.upper() - m_interval.lower()).hours();
+    auto b = (chart_range * 110);
+    qDebug() << "b: " << b.hours();
+    auto c = b / 100;
+    qDebug() << "c: " << c.hours();
+    auto a = (chart_range - ((chart_range * 110) / 100)) / 2;
+    qDebug() << "a: " << a.hours();
+    m_interval = {m_interval.lower() + a, m_interval.upper() - a};
+    qDebug() << "result: " << (m_interval.upper() - m_interval.lower()).hours();
+  } else {
+    qDebug() << "********************************";
+    qDebug() << "out";
+    qDebug() << "********************************";
+    qDebug() << "range: " << (m_interval.upper() - m_interval.lower()).hours();
+    auto b = (chart_range * 100);
+    qDebug() << "b: " << b.hours();
+    auto c = b / 110;
+    qDebug() << "c: " << c.hours();
+    auto a = ((chart_range * 100) / 110 - chart_range) / 2;
+    qDebug() << "a: " << a.hours();
+    m_interval = {m_interval.lower() - a, m_interval.upper() + a};
+    qDebug() << "result: " << (m_interval.upper() - m_interval.lower()).hours();
+  }
+  on_data_loaded({});
+  update();
+}
+
 void HistoricalOrderImbalanceChartView::on_data_loaded(
     const std::vector<Nexus::OrderImbalance>& data) {
-  m_imbalances.clear();
   m_data_points.clear();
-  auto rand = std::default_random_engine(std::random_device()());
-  auto time = boost::posix_time::ptime({2005, 10, 10});
-  for(auto i = 0; i < 10; ++i) {
-    m_imbalances.emplace_back(
-      Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
-      Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100), time));
-    m_minimum_value = min(m_minimum_value, Scalar(m_imbalances.back().m_size));
-    m_maximum_value = max(m_maximum_value, Scalar(m_imbalances.back().m_size));
-    time += boost::posix_time::hours(12);
+  if(m_imbalances.empty()) {
+    auto rand = std::default_random_engine(std::random_device()());
+    auto time = boost::posix_time::ptime({2005, 10, 10});
+    for(auto i = 0; i < 506; ++i) {
+      m_imbalances.emplace_back(
+        Nexus::OrderImbalance(Nexus::Security("TEST", 0), Nexus::Side::BID,
+        Nexus::Quantity(rand() % 10000), Nexus::Money(rand() % 100), time));
+      time += boost::posix_time::hours(12);
+    }
+  }
+  for(auto& imbalance : m_imbalances) {
+    if(m_interval.lower() <= imbalance.m_timestamp &&
+        imbalance.m_timestamp <= m_interval.upper()) {
+      m_minimum_value = min(m_minimum_value, Scalar(imbalance.m_size));
+      m_maximum_value = max(m_maximum_value, Scalar(imbalance.m_size));
+    }
   }
   auto chart_drawable_width = m_chart_size.width() - (2 * CHART_PADDING());
-  for(auto i = size_t(0); i < m_imbalances.size(); ++i) {
-    qDebug() << "w: " << width();
-    qDebug() << "cw: " << m_chart_size.width();
+  auto lower_index = std::lower_bound(m_imbalances.begin(), m_imbalances.end(),
+    m_interval.lower(), [] (const auto& item, const auto& value) {
+      return item.m_timestamp < value;
+    });
+  auto upper_index = std::upper_bound(m_imbalances.begin(), m_imbalances.end(),
+    m_interval.upper(), [] (const auto& value, const auto& item) {
+      return item.m_timestamp > value;
+    });
+  auto data_point_count = std::distance(lower_index, upper_index);
+  for(auto i = 0; i < data_point_count; ++i) {
     auto x = LEFT_MARGIN() + CHART_PADDING() +
       static_cast<int>(static_cast<double>(chart_drawable_width) /
-      static_cast<double>(m_imbalances.size() - 1) * static_cast<double>(i));
+      static_cast<double>(data_point_count - 1) * static_cast<double>(i));
     auto y = map_to(m_imbalances[i].m_size,
       static_cast<Nexus::Quantity>(m_minimum_value),
       static_cast<Nexus::Quantity>(m_maximum_value),
