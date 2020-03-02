@@ -21,7 +21,7 @@ namespace Spire {
 
       HistoricalOrderImbalanceChartView(
         const TimeInterval& interval,
-        std::shared_ptr<OrderImbalanceIndicatorModel> model,
+        const std::vector<Nexus::OrderImbalance>& imbalances,
         QWidget* parent = nullptr);
 
       void set_display_type(DISPLAY_TYPE type);
@@ -36,7 +36,6 @@ namespace Spire {
       void wheelEvent(QWheelEvent* event) override;
 
     private:
-      std::shared_ptr<OrderImbalanceIndicatorModel> m_model;
       std::vector<Nexus::OrderImbalance> m_imbalances;
       std::vector<QPoint> m_data_points;
       TimeInterval m_interval;
@@ -52,7 +51,7 @@ namespace Spire {
       void draw_line(QPainter& painter, const QPoint& point1,
         const QPoint& point2);
       void draw_point(QPainter& painter, const QPoint& point);
-      void on_data_loaded(const std::vector<Nexus::OrderImbalance>& data);
+      void update_points();
   };
 }
 
