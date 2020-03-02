@@ -49,6 +49,9 @@ namespace Spire {
       QPen m_dashed_line_pen;
       QtPromise<std::vector<Nexus::OrderImbalance>> m_load_promise;
 
+      void draw_line(QPainter& painter, const QPoint& point1,
+        const QPoint& point2);
+      void draw_point(QPainter& painter, const QPoint& point);
       void on_data_loaded(const std::vector<Nexus::OrderImbalance>& data);
   };
 }
