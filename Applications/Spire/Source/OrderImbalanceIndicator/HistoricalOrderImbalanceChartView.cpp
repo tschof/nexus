@@ -11,6 +11,9 @@
 using namespace Spire;
 
 namespace {
+  const auto ZOOM = 110;
+  const auto PAN = 100;
+
   auto BOTTOM_MARGIN() {
     return scale_height(34);
   }
@@ -66,7 +69,7 @@ void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
   if(m_is_dragging) {
     auto pixel_delta = static_cast<int>(
       static_cast<double>(event->x() - m_last_mouse_pos.x()) /
-      static_cast<double>(m_chart_size.width()) * 100);
+      static_cast<double>(m_chart_size.width()) * PAN);
     if(pixel_delta != 0) {
       auto chart_delta = (m_interval.upper() - m_interval.lower()) / 100 *
         pixel_delta;
@@ -125,21 +128,21 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
   }
   auto cover = QPolygon();
   cover << QPoint(LEFT_MARGIN() + scale_width(1), 0) << QPoint(width(), 0);
-  if(m_data_points.size() == 1) {
-    auto point1 = m_data_points.front();
+  if(m_chart_points.size() == 1) {
+    auto point1 = m_chart_points.front().m_point;
     point1.setX(LEFT_MARGIN() + CHART_PADDING());
-    auto point2 = m_data_points.front();
+    auto point2 = m_chart_points.front().m_point;
     point2.setX(point1.x() + m_chart_size.width() - (2 * CHART_PADDING()));
     draw_line(painter, point1, point2);
     draw_point(painter, point1);
     draw_point(painter, point2);
   } else {
-    for(auto point = m_data_points.begin(); point != m_data_points.end();
+    for(auto point = m_chart_points.begin(); point != m_chart_points.end();
         ++point) {
-      if(std::next(point) != m_data_points.end()) {
-        draw_line(painter, *point, *(point + 1));
+      if(std::next(point) != m_chart_points.end()) {
+        draw_line(painter, point->m_point, std::next(point)->m_point);
       }
-      draw_point(painter, *point);
+      draw_point(painter, point->m_point);
     }
   }
 }
@@ -158,12 +161,12 @@ void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
   if(event->angleDelta().y() < 0) {
     if(m_interval.lower() > m_imbalances.front().m_timestamp ||
         m_interval.upper() < m_imbalances.back().m_timestamp) {
-      auto zoom = (chart_range - ((chart_range * 110) / 100)) / 2;
+      auto zoom = (chart_range - ((chart_range * ZOOM) / 100)) / 2;
       m_interval = {m_interval.lower() + zoom, m_interval.upper() - zoom};
     }
   } else {
-    if(m_data_points.size() > 1) {
-      auto zoom = ((chart_range * 100) / 110 - chart_range) / 2;
+    if(m_chart_points.size() > 1) {
+      auto zoom = ((chart_range * 100) / ZOOM - chart_range) / 2;
       m_interval = {m_interval.lower() - zoom, m_interval.upper() + zoom};
     }
   }
@@ -190,7 +193,7 @@ void HistoricalOrderImbalanceChartView::draw_point(QPainter& painter,
 void HistoricalOrderImbalanceChartView::update_points() {
   auto minimum_value = Scalar(std::numeric_limits<Nexus::Quantity>::max());
   auto maximum_value = Scalar(0);
-  m_data_points.clear();
+  m_chart_points.clear();
   for(auto& imbalance : m_imbalances) {
     if(m_interval.lower() <= imbalance.m_timestamp &&
         imbalance.m_timestamp <= m_interval.upper()) {
@@ -209,8 +212,8 @@ void HistoricalOrderImbalanceChartView::update_points() {
     });
   auto data_point_count = std::distance(lower_index, upper_index);
   if(data_point_count == 1) {
-    m_data_points.emplace_back(LEFT_MARGIN() + CHART_PADDING(),
-      m_chart_size.height() / 2);
+    m_chart_points.emplace_back(QPoint(LEFT_MARGIN() + CHART_PADDING(),
+      m_chart_size.height() / 2), *lower_index);
     return;
   }
   auto start_index = lower_index;
@@ -224,7 +227,7 @@ void HistoricalOrderImbalanceChartView::update_points() {
       static_cast<Nexus::Quantity>(maximum_value),
       static_cast<Nexus::Quantity>(minimum_value),
       0 + scale_height(5), m_chart_size.height() - scale_height(8));
-    m_data_points.push_back({x, y});
+    m_chart_points.emplace_back(QPoint(x, y), *lower_index);
   }
   update();
 }

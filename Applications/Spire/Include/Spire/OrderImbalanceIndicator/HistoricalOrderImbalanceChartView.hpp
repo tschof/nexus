@@ -36,8 +36,18 @@ namespace Spire {
       void wheelEvent(QWheelEvent* event) override;
 
     private:
+      struct ChartPoint {
+        QPoint m_point;
+        const Nexus::OrderImbalance& m_imbalance;
+
+        ChartPoint(const QPoint& point,
+          Nexus::OrderImbalance& imbalance)
+          : m_point(point),
+            m_imbalance(imbalance) {}
+      };
+
       std::vector<Nexus::OrderImbalance> m_imbalances;
-      std::vector<QPoint> m_data_points;
+      std::vector<ChartPoint> m_chart_points;
       TimeInterval m_interval;
       Scalar m_minimum_value;
       Scalar m_maximum_value;
