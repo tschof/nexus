@@ -158,17 +158,13 @@ void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
   if(event->angleDelta().y() < 0) {
     if(m_interval.lower() > m_imbalances.front().m_timestamp ||
         m_interval.upper() < m_imbalances.back().m_timestamp) {
-      auto b = (chart_range * 110);
-      auto c = b / 100;
-      auto a = (chart_range - ((chart_range * 110) / 100)) / 2;
-      m_interval = {m_interval.lower() + a, m_interval.upper() - a};
+      auto zoom = (chart_range - ((chart_range * 110) / 100)) / 2;
+      m_interval = {m_interval.lower() + zoom, m_interval.upper() - zoom};
     }
   } else {
     if(m_data_points.size() > 1) {
-      auto b = (chart_range * 100);
-      auto c = b / 110;
-      auto a = ((chart_range * 100) / 110 - chart_range) / 2;
-      m_interval = {m_interval.lower() - a, m_interval.upper() + a};
+      auto zoom = ((chart_range * 100) / 110 - chart_range) / 2;
+      m_interval = {m_interval.lower() - zoom, m_interval.upper() + zoom};
     }
   }
   update_points();
