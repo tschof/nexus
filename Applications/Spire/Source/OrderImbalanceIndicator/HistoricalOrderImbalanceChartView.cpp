@@ -149,6 +149,7 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
 void HistoricalOrderImbalanceChartView::resizeEvent(QResizeEvent* event) {
   m_chart_size.setWidth(width() - LEFT_MARGIN());
   m_chart_size.setHeight(height() - BOTTOM_MARGIN());
+  on_data_loaded({});
 }
 
 void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
@@ -187,6 +188,10 @@ void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
 
 void HistoricalOrderImbalanceChartView::on_data_loaded(
     const std::vector<Nexus::OrderImbalance>& data) {
+  //qDebug() << height();
+  //qDebug() << "c h: " << m_chart_size.height();
+  m_minimum_value = Scalar(std::numeric_limits<Nexus::Quantity>::max());
+  m_maximum_value = Scalar(0);
   m_data_points.clear();
   if(m_imbalances.empty()) {
     auto rand = std::default_random_engine(std::random_device()());
@@ -239,27 +244,24 @@ void HistoricalOrderImbalanceChartView::on_data_loaded(
     m_interval.upper(), [] (const auto& value, const auto& item) {
       return item.m_timestamp > value;
     });
-  //if(lower_index != m_imbalances.end()) {
-  //  qDebug() << "first size: " << static_cast<int>(lower_index->m_size);
-  //} else {
-  //  qDebug() << "first is null";
-  //}
-  //if(upper_index != m_imbalances.end()) {
-  //   qDebug() << "last size: " << static_cast<int>(upper_index->m_size); 
-  //} else {
-  //  qDebug() << "last is null";
-  //}
+  //qDebug() << "min: " << static_cast<int>(static_cast<Nexus::Quantity>(m_minimum_value));
+  //qDebug() << "max: " << static_cast<int>(static_cast<Nexus::Quantity>(m_maximum_value));
   auto data_point_count = std::distance(lower_index, upper_index);
-  for(auto i = 0; i < data_point_count; ++i) {
+  //qDebug() << "count: " << data_point_count;
+  auto start_index = lower_index;
+  for(; lower_index != upper_index; ++lower_index) {
+    //qDebug() << "index: " << std::distance(m_imbalances.begin(), lower_index);
+    auto index = std::distance(m_imbalances.begin(), lower_index) -
+      std::distance(m_imbalances.begin(), start_index);
     auto x = LEFT_MARGIN() + CHART_PADDING() +
       static_cast<int>(static_cast<double>(chart_drawable_width) /
-      static_cast<double>(data_point_count - 1) * static_cast<double>(i));
-    auto y = map_to(m_imbalances[i].m_size,
+      static_cast<double>(data_point_count - 1) * static_cast<double>(index));
+    auto y = map_to(lower_index->m_size,
       static_cast<Nexus::Quantity>(m_maximum_value),
       static_cast<Nexus::Quantity>(m_minimum_value),
       0 + scale_height(5), m_chart_size.height() - scale_height(8));
+    //qDebug() << x << ", " << y;
     m_data_points.push_back({x, y});
-    //qDebug() << "size: " << static_cast<int>(m_imbalances[i].m_size);
   }
   //qDebug() << "size: " << m_data_points.size();
 }

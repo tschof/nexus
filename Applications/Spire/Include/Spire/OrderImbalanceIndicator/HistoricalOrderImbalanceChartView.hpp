@@ -33,9 +33,6 @@ namespace Spire {
       void mouseReleaseEvent(QMouseEvent* event) override;
       void paintEvent(QPaintEvent* event) override;
       void resizeEvent(QResizeEvent* event) override;
-      void showEvent(QShowEvent* event) override {
-        on_data_loaded({});
-      }
       void wheelEvent(QWheelEvent* event) override;
 
     private:
