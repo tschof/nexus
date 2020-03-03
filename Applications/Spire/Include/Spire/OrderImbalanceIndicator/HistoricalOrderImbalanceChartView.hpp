@@ -66,9 +66,9 @@ namespace Spire {
       void draw_line(QPainter& painter, const QPoint& point1,
         const QPoint& point2);
       void draw_point(QPainter& painter, const QPoint& point);
-      void draw_x_axis_label(QPainter& painter, const QPoint& point,
+      void draw_x_axis_label(QPainter& painter, int pos_x,
         const boost::posix_time::ptime& timestamp);
-      void draw_x_axis_label(QPainter& painter, const QPoint& point,
+      void draw_x_axis_label(QPainter& painter, int pos_x,
         const boost::posix_time::ptime& timestamp,
         const QColor& background_color, const QColor& text_color);
       void draw_y_axis_label(QPainter& painter, int pos_y,

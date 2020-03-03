@@ -125,17 +125,16 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
   auto label_count = min(static_cast<int>(m_chart_points.size()), 5);
   if(m_chart_points.size() == 1) {
     auto point = m_chart_points.front().m_point;
-    draw_x_axis_label(painter, point,
+    draw_x_axis_label(painter, point.x(),
       m_chart_points.front().m_imbalance.m_timestamp);
-    auto right_point = QPoint(point.x() + m_chart_size.width() -
-      (2 * CHART_PADDING()), point.y());
-    draw_x_axis_label(painter, right_point,
-      m_chart_points.front().m_imbalance.m_timestamp);
+    draw_x_axis_label(painter, point.x() + m_chart_size.width() -
+      (2 * CHART_PADDING()), m_chart_points.front().m_imbalance.m_timestamp);
   } else {
     for(auto i = 0; i < label_count; ++i) {
       auto index = map_to(i, 0, label_count - 1, 0, m_chart_points.size() - 1);
       auto& point = m_chart_points[index];
-      draw_x_axis_label(painter, point.m_point, point.m_imbalance.m_timestamp);
+      draw_x_axis_label(painter, point.m_point.x(),
+        point.m_imbalance.m_timestamp);
     }
   }
   auto gradient = QLinearGradient(0, m_chart_size.height(), 0, 0);
@@ -202,7 +201,7 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
       m_crosshair_point->m_point.y());
     painter.drawLine(m_crosshair_point->m_point.x(), 0,
       m_crosshair_point->m_point.x(), m_chart_size.height());
-    draw_x_axis_label(painter, m_crosshair_point->m_point,
+    draw_x_axis_label(painter, m_crosshair_point->m_point.x(),
       m_crosshair_point->m_imbalance.m_timestamp, QColor("#333333"),
       Qt::white);
     draw_hover_widgets(painter, m_crosshair_point->m_point);
@@ -281,17 +280,17 @@ void HistoricalOrderImbalanceChartView::draw_point(QPainter& painter,
 }
 
 void HistoricalOrderImbalanceChartView::draw_x_axis_label(QPainter& painter,
-    const QPoint& point, const boost::posix_time::ptime& timestamp) {
-  draw_x_axis_label(painter, point, timestamp, Qt::transparent, Qt::black);
+    int pos_x, const boost::posix_time::ptime& timestamp) {
+  draw_x_axis_label(painter, pos_x, timestamp, Qt::transparent, Qt::black);
 }
 
 void HistoricalOrderImbalanceChartView::draw_x_axis_label(QPainter& painter,
-    const QPoint& point, const boost::posix_time::ptime& timestamp,
+    int pos_x, const boost::posix_time::ptime& timestamp,
     const QColor& background_color, const QColor& text_color) {
   painter.setPen(QColor("#333333"));
-  painter.drawLine(point.x(), m_chart_size.height(), point.x(),
+  painter.drawLine(pos_x, m_chart_size.height(), pos_x,
     m_chart_size.height() + scale_height(2));
-  painter.fillRect(point.x() - scale_width(29), m_chart_size.height(),
+  painter.fillRect(pos_x - scale_width(29), m_chart_size.height(),
     scale_width(59), scale_height(34), background_color);
   painter.setPen(text_color);
   painter.setFont(m_label_font);
@@ -299,14 +298,14 @@ void HistoricalOrderImbalanceChartView::draw_x_axis_label(QPainter& painter,
   auto date_text = locale.toString(QDate(timestamp.date().year(),
     timestamp.date().month(), timestamp.date().day()), "M/d/yyyy");
   auto date_text_width = m_font_metrics.horizontalAdvance(date_text);
-  auto date_text_pos = QPoint(point.x() - (date_text_width / 2),
+  auto date_text_pos = QPoint(pos_x - (date_text_width / 2),
     m_chart_size.height() + scale_height(14));
   painter.drawText(date_text_pos, date_text);
   auto time_text = locale.toString(QTime(
     static_cast<int>(timestamp.time_of_day().hours()),
     static_cast<int>(timestamp.time_of_day().minutes())), "h:mm A");
   auto time_text_width = m_font_metrics.horizontalAdvance(time_text);
-  auto time_text_pos = QPoint(point.x() - (time_text_width / 2),
+  auto time_text_pos = QPoint(pos_x - (time_text_width / 2),
     m_chart_size.height() + scale_height(25));
   painter.drawText(time_text_pos, time_text);
 }
