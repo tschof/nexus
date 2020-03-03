@@ -28,7 +28,7 @@ namespace {
     return scale_width(13);
   }
 
-  const auto& CROSSHAIR_CURSOR() {
+  const auto& CURSOR() {
     // TODO: replace with proper cursor file
     static auto cursor = QCursor(QPixmap::fromImage(
       imageFromSvg(":/Icons/chart-cursor.svg", scale(18, 18))));
@@ -58,7 +58,7 @@ HistoricalOrderImbalanceChartView::HistoricalOrderImbalanceChartView(
 }
 
 void HistoricalOrderImbalanceChartView::leaveEvent(QEvent* event) {
-  m_crosshair_pos = boost::none;
+  m_cursor_pos = boost::none;
 }
 
 void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
@@ -67,10 +67,10 @@ void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
   }
   if(QRect(LEFT_MARGIN(), 0, m_chart_size.width(), m_chart_size.height())
       .contains(event->pos())) {
-    m_crosshair_pos = event->pos();
-    setCursor(CROSSHAIR_CURSOR());
+    m_cursor_pos = event->pos();
+    setCursor(CURSOR());
   } else {
-    m_crosshair_pos = boost::none;
+    m_cursor_pos = boost::none;
     setCursor(Qt::ArrowCursor);
   }
   if(m_is_dragging) {
@@ -126,13 +126,6 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
   painter.fillRect(LEFT_MARGIN() + CHART_PADDING(), 0,
     m_chart_size.width() - (2 * CHART_PADDING()),
     m_chart_size.height() - scale_height(1), gradient);
-  if(m_crosshair_pos) {
-    painter.setPen(m_dashed_line_pen);
-    painter.drawLine(LEFT_MARGIN(), m_crosshair_pos->y(), width(),
-      m_crosshair_pos->y());
-    painter.drawLine(m_crosshair_pos->x(), 0, m_crosshair_pos->x(),
-      m_chart_size.height());
-  }
   auto cover = QPolygon();
   cover << QPoint(LEFT_MARGIN() + scale_width(1), 0) << QPoint(width(), 0);
   if(m_chart_points.size() == 1) {
@@ -167,11 +160,27 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
       }
     // TODO: forces the points to draw on top of lines, but look into
     //       how to avoid looping over this twice.
+    auto snap_size = static_cast<int>((m_chart_size.width() -
+      (2 * CHART_PADDING())) / m_chart_points.size() / 2);
     if(static_cast<int>(m_chart_points.size()) * scale_width(12) <
         m_chart_size.width()) {
       for(auto& point : m_chart_points) {
         draw_point(painter, point.m_point);
+        auto pos_x = point.m_point.x();
+        if(m_cursor_pos) {
+          if(pos_x - snap_size < m_cursor_pos->x() &&
+              m_cursor_pos->x() < pos_x + snap_size) {
+            m_crosshair_pos = point.m_point;
+          }
+        }
       }
+    }
+    if(m_cursor_pos) {
+      painter.setPen(m_dashed_line_pen);
+      painter.drawLine(LEFT_MARGIN(), m_crosshair_pos.y(), width(),
+        m_crosshair_pos.y());
+      painter.drawLine(m_crosshair_pos.x(), 0, m_crosshair_pos.x(),
+        m_chart_size.height());
     }
   }
 }

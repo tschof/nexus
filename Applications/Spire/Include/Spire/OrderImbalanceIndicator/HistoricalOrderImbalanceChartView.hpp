@@ -51,7 +51,8 @@ namespace Spire {
       TimeInterval m_interval;
       Scalar m_minimum_value;
       Scalar m_maximum_value;
-      boost::optional<QPoint> m_crosshair_pos;
+      boost::optional<QPoint> m_cursor_pos;
+      QPoint m_crosshair_pos;
       QFont m_label_font;
       QFontMetrics m_font_metrics;
       bool m_is_dragging;
