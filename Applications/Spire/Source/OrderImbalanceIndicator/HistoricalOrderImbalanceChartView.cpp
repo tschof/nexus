@@ -22,10 +22,6 @@ namespace {
     return scale_height(34);
   }
 
-  auto LEFT_MARGIN() {
-    return scale_width(36);
-  }
-
   auto RIGHT_MARGIN() {
     return scale_width(18);
   }
@@ -71,7 +67,7 @@ void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
   if(m_imbalances.empty()) {
     return;
   }
-  if(QRect(LEFT_MARGIN(), 0, m_chart_size.width(), m_chart_size.height())
+  if(QRect(left_margin(), 0, m_chart_size.width(), m_chart_size.height())
       .contains(event->pos())) {
     m_cursor_pos = event->pos();
     setCursor(CURSOR());
@@ -122,9 +118,9 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
   painter.setRenderHint(QPainter::Antialiasing);
   painter.fillRect(event->rect(), Qt::white);
   painter.setPen(Qt::black);
-  painter.drawLine(LEFT_MARGIN(), 0, LEFT_MARGIN(),
+  painter.drawLine(left_margin(), 0, left_margin(),
     m_chart_size.height());
-  painter.drawLine(LEFT_MARGIN(), m_chart_size.height(),
+  painter.drawLine(left_margin(), m_chart_size.height(),
     width() - RIGHT_MARGIN(), m_chart_size.height());
   auto label_count = min(static_cast<int>(m_chart_points.size()), 5);
   if(m_chart_points.size() == 1) {
@@ -145,14 +141,14 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
   auto gradient = QLinearGradient(0, m_chart_size.height(), 0, 0);
   gradient.setColorAt(0, QColor("#E2E0FF"));
   gradient.setColorAt(1, Qt::white);
-  painter.fillRect(LEFT_MARGIN() + CHART_PADDING(), 0,
+  painter.fillRect(left_margin() + CHART_PADDING(), 0,
     m_chart_size.width() - (2 * CHART_PADDING()),
     m_chart_size.height() - scale_height(1), gradient);
   auto cover = QPolygon();
-  cover << QPoint(LEFT_MARGIN() + scale_width(1), 0) << QPoint(width(), 0);
+  cover << QPoint(left_margin() + scale_width(1), 0) << QPoint(width(), 0);
   if(m_chart_points.size() == 1) {
     auto point1 = m_chart_points.front().m_point;
-    point1.setX(LEFT_MARGIN() + CHART_PADDING());
+    point1.setX(left_margin() + CHART_PADDING());
     auto point2 = m_chart_points.front().m_point;
     point2.setX(point1.x() + m_chart_size.width() - (2 * CHART_PADDING()));
     draw_line(painter, point1, point2);
@@ -161,7 +157,7 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     draw_y_axis_label(painter, m_chart_points.front().m_point.y(),
       scalar_to_string(Scalar(m_chart_points.front().m_imbalance.m_size)));
     if(m_cursor_pos) {
-      if(m_cursor_pos->x() < (m_chart_size.width() / 2) + LEFT_MARGIN()) {
+      if(m_cursor_pos->x() < (m_chart_size.width() / 2) + left_margin()) {
         m_crosshair_point = ChartPoint(point1,
           m_chart_points.front().m_imbalance);
       } else {
@@ -187,7 +183,6 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
       if(m_cursor_pos) {
         if(pos_x - snap_size < m_cursor_pos->x() &&
             m_cursor_pos->x() < pos_x + snap_size) {
-          qDebug() << point->m_imbalance.m_timestamp.date().year();
           m_crosshair_point = ChartPoint(point->m_point, point->m_imbalance);
         }
       }
@@ -203,7 +198,7 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
   }
   if(m_cursor_pos && m_crosshair_point) {
     painter.setPen(m_dashed_line_pen);
-    painter.drawLine(LEFT_MARGIN(), m_crosshair_point->m_point.y(), width(),
+    painter.drawLine(left_margin(), m_crosshair_point->m_point.y(), width(),
       m_crosshair_point->m_point.y());
     painter.drawLine(m_crosshair_point->m_point.x(), 0,
       m_crosshair_point->m_point.x(), m_chart_size.height());
@@ -215,7 +210,7 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
 }
 
 void HistoricalOrderImbalanceChartView::resizeEvent(QResizeEvent* event) {
-  m_chart_size.setWidth(width() - LEFT_MARGIN() - RIGHT_MARGIN());
+  m_chart_size.setWidth(width() - left_margin() - RIGHT_MARGIN());
   m_chart_size.setHeight(height() - BOTTOM_MARGIN());
   update_points();
 }
@@ -319,12 +314,17 @@ void HistoricalOrderImbalanceChartView::draw_x_axis_label(QPainter& painter,
 void HistoricalOrderImbalanceChartView::draw_y_axis_label(QPainter& painter,
     int pos_y, const QString& text) {
   painter.setPen(QColor("#333333"));
-  painter.drawLine(LEFT_MARGIN() - scale_width(2), pos_y, LEFT_MARGIN(),
+  painter.drawLine(left_margin() - scale_width(2), pos_y, left_margin(),
     pos_y);
   auto text_width = m_font_metrics.horizontalAdvance(text);
   painter.setFont(m_label_font);
-  painter.drawText(LEFT_MARGIN() - text_width - scale_width(4),
+  painter.drawText(left_margin() - text_width - scale_width(4),
     pos_y + scale_height(4), text);
+}
+
+int HistoricalOrderImbalanceChartView::left_margin() const {
+  return m_font_metrics.horizontalAdvance(scalar_to_string(m_maximum_value)) +
+    scale_width(4);
 }
 
 QString HistoricalOrderImbalanceChartView::scalar_to_string(
@@ -359,7 +359,7 @@ void HistoricalOrderImbalanceChartView::update_points() {
     });
   auto data_point_count = std::distance(lower_index, upper_index);
   if(data_point_count == 1) {
-    m_chart_points.emplace_back(QPoint(LEFT_MARGIN() + CHART_PADDING(),
+    m_chart_points.emplace_back(QPoint(left_margin() + CHART_PADDING(),
       m_chart_size.height() / 2), *lower_index);
     return;
   }
@@ -367,7 +367,7 @@ void HistoricalOrderImbalanceChartView::update_points() {
   for(; lower_index != upper_index; ++lower_index) {
     auto index = std::distance(m_imbalances.begin(), lower_index) -
       std::distance(m_imbalances.begin(), start_index);
-    auto x = LEFT_MARGIN() + CHART_PADDING() +
+    auto x = left_margin() + CHART_PADDING() +
       static_cast<int>(static_cast<double>(chart_drawable_width) /
       static_cast<double>(data_point_count - 1) * static_cast<double>(index));
     auto y = map_to(lower_index->m_size,

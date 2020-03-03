@@ -75,6 +75,7 @@ namespace Spire {
         const QString& text);
       QString imbalance_to_string(
         const Nexus::OrderImbalance& imbalance) const;
+      int left_margin() const;
       QString scalar_to_string(Scalar value) const;
       void update_points();
   };
