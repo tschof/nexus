@@ -305,6 +305,9 @@ void HistoricalOrderImbalanceChartView::draw_x_axis_label(QPainter& painter,
 void HistoricalOrderImbalanceChartView::draw_x_axis_label(QPainter& painter,
     const QPoint& point, const boost::posix_time::ptime& timestamp,
     const QColor& background_color, const QColor& text_color) {
+  painter.setPen(Qt::black);
+  painter.drawLine(point.x(), m_chart_size.height(), point.x(),
+    m_chart_size.height() + scale_height(2));
   painter.fillRect(point.x() - scale_width(29), m_chart_size.height(),
     scale_width(59), scale_height(34), background_color);
   painter.setPen(text_color);
