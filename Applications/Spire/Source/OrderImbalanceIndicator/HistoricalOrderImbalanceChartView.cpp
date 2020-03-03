@@ -33,7 +33,7 @@ namespace {
   const auto& CURSOR() {
     // TODO: replace with proper cursor file
     static auto cursor = QCursor(QPixmap::fromImage(
-      imageFromSvg(":/Icons/chart-cursor.svg", scale(18, 18))));
+      imageFromSvg(":/Icons/chart-cursor-reversed.svg", scale(18, 18))));
     return cursor;
   }
 }
