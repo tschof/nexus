@@ -3,11 +3,13 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QWheelEvent>
+#include "Nexus/Definitions/Money.hpp"
 #include "Spire/OrderImbalanceIndicator/OrderImbalanceIndicatorModel.hpp"
 #include "Spire/Spire/Dimensions.hpp"
 #include "Spire/Spire/Utility.hpp"
 #include "Spire/Ui/Ui.hpp"
 
+using namespace Nexus;
 using namespace Spire;
 
 namespace {
@@ -40,13 +42,18 @@ HistoricalOrderImbalanceChartView::HistoricalOrderImbalanceChartView(
     : QWidget(parent),
       m_imbalances(imbalances),
       m_interval(interval),
+      m_label_font("Roboto"),
+      m_font_metrics(m_label_font),
       m_is_dragging(false),
-      m_dashed_line_pen(QColor("#333333"), scale_width(1),
-        Qt::CustomDashLine) {
+      m_dashed_line_pen(QColor("#333333"), scale_width(1), Qt::CustomDashLine),
+      m_display_type(DisplayType::REFERENCE_PRICE) {
   setAttribute(Qt::WA_Hover);
   setMouseTracking(true);
   m_dashed_line_pen.setDashPattern({static_cast<double>(scale_width(3)),
     static_cast<double>(scale_width(3))});
+  m_label_font.setPixelSize(scale_height(10));
+  m_font_metrics = QFontMetrics(m_label_font);
+  m_item_delegate = new CustomVariantItemDelegate(this);
   update_points();
 }
 
@@ -137,12 +144,31 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     draw_point(painter, point1);
     draw_point(painter, point2);
   } else {
+    painter.setPen(QColor("#333333"));
+    painter.setFont(m_label_font);
+    auto max_text = scalar_to_string(m_maximum_value);
+    auto max_text_width = m_font_metrics.horizontalAdvance(max_text);
+    painter.drawText(LEFT_MARGIN() - max_text_width - scale_width(2),
+      scale_height(8), max_text);
+    auto mid_text = scalar_to_string((m_maximum_value - m_minimum_value) / 2 +
+      m_minimum_value);
+    auto mid_text_width = m_font_metrics.horizontalAdvance(mid_text);
+    painter.drawText(LEFT_MARGIN() - mid_text_width - scale_width(2),
+      scale_height(75), mid_text);
+    auto min_text = scalar_to_string(m_minimum_value);
+    auto min_text_width = m_font_metrics.horizontalAdvance(min_text);
+    painter.drawText(LEFT_MARGIN() - min_text_width - scale_width(2),
+      m_chart_size.height() - scale_height(8), min_text);
     for(auto point = m_chart_points.begin(); point != m_chart_points.end();
         ++point) {
       if(std::next(point) != m_chart_points.end()) {
         draw_line(painter, point->m_point, std::next(point)->m_point);
       }
-      draw_point(painter, point->m_point);
+    }
+    // TODO: forces the points to draw on top of lines, but look into
+    //       how to avoid looping over this twice.
+    for(auto& point : m_chart_points) {
+      draw_point(painter, point.m_point);
     }
   }
 }
@@ -190,15 +216,25 @@ void HistoricalOrderImbalanceChartView::draw_point(QPainter& painter,
   painter.drawEllipse(point, scale_width(4), scale_width(4));
 }
 
+QString HistoricalOrderImbalanceChartView::scalar_to_string(
+    Scalar value) const {
+  if(m_display_type == DisplayType::REFERENCE_PRICE) {
+    return m_item_delegate->displayText(QVariant::fromValue<Money>(
+      static_cast<Money>(value)), QLocale());
+  }
+  return m_item_delegate->displayText(QVariant::fromValue<Quantity>(
+    static_cast<Quantity>(value)), QLocale());
+}
+
 void HistoricalOrderImbalanceChartView::update_points() {
-  auto minimum_value = Scalar(std::numeric_limits<Nexus::Quantity>::max());
-  auto maximum_value = Scalar(0);
+  m_minimum_value = Scalar(std::numeric_limits<Nexus::Quantity>::max());
+  m_maximum_value = Scalar(0);
   m_chart_points.clear();
   for(auto& imbalance : m_imbalances) {
     if(m_interval.lower() <= imbalance.m_timestamp &&
         imbalance.m_timestamp <= m_interval.upper()) {
-      minimum_value = min(minimum_value, Scalar(imbalance.m_size));
-      maximum_value = max(maximum_value, Scalar(imbalance.m_size));
+      m_minimum_value = min(m_minimum_value, Scalar(imbalance.m_size));
+      m_maximum_value = max(m_maximum_value, Scalar(imbalance.m_size));
     }
   }
   auto chart_drawable_width = m_chart_size.width() - (2 * CHART_PADDING());
@@ -224,8 +260,8 @@ void HistoricalOrderImbalanceChartView::update_points() {
       static_cast<int>(static_cast<double>(chart_drawable_width) /
       static_cast<double>(data_point_count - 1) * static_cast<double>(index));
     auto y = map_to(lower_index->m_size,
-      static_cast<Nexus::Quantity>(maximum_value),
-      static_cast<Nexus::Quantity>(minimum_value),
+      static_cast<Nexus::Quantity>(m_maximum_value),
+      static_cast<Nexus::Quantity>(m_minimum_value),
       0 + scale_height(5), m_chart_size.height() - scale_height(8));
     m_chart_points.emplace_back(QPoint(x, y), *lower_index);
   }

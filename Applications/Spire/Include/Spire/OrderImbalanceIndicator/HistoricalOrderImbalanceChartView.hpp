@@ -5,15 +5,15 @@
 #include "Nexus/Definitions/OrderImbalance.hpp"
 #include "Spire/OrderImbalanceIndicator/OrderImbalanceIndicator.hpp"
 #include "Spire/Spire/Intervals.hpp"
-#include "Spire/Spire/QtPromise.hpp"
 #include "Spire/Spire/Scalar.hpp"
+#include "Spire/Ui/CustomQtVariants.hpp"
 
 namespace Spire {
 
   class HistoricalOrderImbalanceChartView : public QWidget {
     public:
 
-      enum class DISPLAY_TYPE {
+      enum class DisplayType {
         REFERENCE_PRICE,
         SIZE,
         NOTIONAL_VALUE
@@ -24,7 +24,7 @@ namespace Spire {
         const std::vector<Nexus::OrderImbalance>& imbalances,
         QWidget* parent = nullptr);
 
-      void set_display_type(DISPLAY_TYPE type);
+      void set_display_type(DisplayType type);
 
     protected:
       void leaveEvent(QEvent* event) override;
@@ -52,15 +52,19 @@ namespace Spire {
       Scalar m_minimum_value;
       Scalar m_maximum_value;
       boost::optional<QPoint> m_crosshair_pos;
+      QFont m_label_font;
+      QFontMetrics m_font_metrics;
       bool m_is_dragging;
       QPoint m_last_mouse_pos;
       QSize m_chart_size;
       QPen m_dashed_line_pen;
-      QtPromise<std::vector<Nexus::OrderImbalance>> m_load_promise;
+      CustomVariantItemDelegate* m_item_delegate;
+      DisplayType m_display_type;
 
       void draw_line(QPainter& painter, const QPoint& point1,
         const QPoint& point2);
       void draw_point(QPainter& painter, const QPoint& point);
+      QString scalar_to_string(Scalar value) const;
       void update_points();
   };
 }
