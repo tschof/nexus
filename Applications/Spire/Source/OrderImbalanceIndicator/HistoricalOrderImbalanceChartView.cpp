@@ -159,16 +159,19 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     auto min_text_width = m_font_metrics.horizontalAdvance(min_text);
     painter.drawText(LEFT_MARGIN() - min_text_width - scale_width(2),
       m_chart_size.height() - scale_height(8), min_text);
-    for(auto point = m_chart_points.begin(); point != m_chart_points.end();
-        ++point) {
-      if(std::next(point) != m_chart_points.end()) {
-        draw_line(painter, point->m_point, std::next(point)->m_point);
+      for(auto point = m_chart_points.begin(); point != m_chart_points.end();
+          ++point) {
+        if(std::next(point) != m_chart_points.end()) {
+          draw_line(painter, point->m_point, std::next(point)->m_point);
+        }
       }
-    }
     // TODO: forces the points to draw on top of lines, but look into
     //       how to avoid looping over this twice.
-    for(auto& point : m_chart_points) {
-      draw_point(painter, point.m_point);
+    if(static_cast<int>(m_chart_points.size()) * scale_width(12) <
+        m_chart_size.width()) {
+      for(auto& point : m_chart_points) {
+        draw_point(painter, point.m_point);
+      }
     }
   }
 }
@@ -202,7 +205,7 @@ void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
 
 void HistoricalOrderImbalanceChartView::draw_line(QPainter& painter,
     const QPoint& point1, const QPoint& point2) {
-  painter.setPen({QColor("#4B23A0"), static_cast<qreal>(scale_width(3))});
+  painter.setPen({QColor("#4B23A0"), static_cast<qreal>(scale_width(2))});
   painter.drawLine(point1, point2);
 }
 
