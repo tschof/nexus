@@ -38,12 +38,12 @@ namespace Spire {
     private:
       struct ChartPoint {
         QPoint m_point;
-        const Nexus::OrderImbalance& m_imbalance;
+        Nexus::OrderImbalance m_imbalance;
 
         ChartPoint(const QPoint& point,
-          Nexus::OrderImbalance& imbalance)
+          const Nexus::OrderImbalance& imbalance)
           : m_point(point),
-            m_imbalance(imbalance) {}
+            m_imbalance(std::move(imbalance)) {}
       };
 
       std::vector<Nexus::OrderImbalance> m_imbalances;
@@ -52,7 +52,7 @@ namespace Spire {
       Scalar m_minimum_value;
       Scalar m_maximum_value;
       boost::optional<QPoint> m_cursor_pos;
-      QPoint m_crosshair_pos;
+      boost::optional<ChartPoint> m_crosshair_point;
       QFont m_label_font;
       QFontMetrics m_font_metrics;
       bool m_is_dragging;
@@ -62,9 +62,15 @@ namespace Spire {
       CustomVariantItemDelegate* m_item_delegate;
       DisplayType m_display_type;
 
+      void draw_hover_widgets(QPainter& painter, const QPoint& point);
       void draw_line(QPainter& painter, const QPoint& point1,
         const QPoint& point2);
       void draw_point(QPainter& painter, const QPoint& point);
+      void draw_x_axis_label(QPainter& painter, const QPoint& point,
+        const boost::posix_time::ptime& timestamp);
+      void draw_x_axis_label(QPainter& painter, const QPoint& point,
+        const boost::posix_time::ptime& timestamp,
+        const QColor& background_color, const QColor& text_color);
       QString scalar_to_string(Scalar value) const;
       void update_points();
   };
