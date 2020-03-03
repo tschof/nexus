@@ -71,6 +71,10 @@ namespace Spire {
       void draw_x_axis_label(QPainter& painter, const QPoint& point,
         const boost::posix_time::ptime& timestamp,
         const QColor& background_color, const QColor& text_color);
+      void draw_y_axis_label(QPainter& painter, int pos_y,
+        const QString& text);
+      QString imbalance_to_string(
+        const Nexus::OrderImbalance& imbalance) const;
       QString scalar_to_string(Scalar value) const;
       void update_points();
   };

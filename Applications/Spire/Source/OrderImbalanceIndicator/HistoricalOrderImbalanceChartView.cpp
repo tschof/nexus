@@ -158,11 +158,8 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     draw_line(painter, point1, point2);
     draw_point(painter, point1);
     draw_point(painter, point2);
-    auto label_text = scalar_to_string(Scalar(
-      m_chart_points.front().m_imbalance.m_size));
-    auto mid_text_width = m_font_metrics.horizontalAdvance(label_text);
-    painter.drawText(LEFT_MARGIN() - mid_text_width - scale_width(2),
-      scale_height(75), label_text);
+    draw_y_axis_label(painter, m_chart_points.front().m_point.y(),
+      scalar_to_string(Scalar(m_chart_points.front().m_imbalance.m_size)));
     if(m_cursor_pos) {
       if(m_cursor_pos->x() < (m_chart_size.width() / 2) + LEFT_MARGIN()) {
         m_crosshair_point = ChartPoint(point1,
@@ -173,21 +170,12 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
       }
     }
   } else {
-    painter.setPen(QColor("#333333"));
-    painter.setFont(m_label_font);
-    auto max_text = scalar_to_string(m_maximum_value);
-    auto max_text_width = m_font_metrics.horizontalAdvance(max_text);
-    painter.drawText(LEFT_MARGIN() - max_text_width - scale_width(2),
-      scale_height(8), max_text);
-    auto mid_text = scalar_to_string((m_maximum_value - m_minimum_value) / 2 +
-      m_minimum_value);
-    auto mid_text_width = m_font_metrics.horizontalAdvance(mid_text);
-    painter.drawText(LEFT_MARGIN() - mid_text_width - scale_width(2),
-      scale_height(75), mid_text);
-    auto min_text = scalar_to_string(m_minimum_value);
-    auto min_text_width = m_font_metrics.horizontalAdvance(min_text);
-    painter.drawText(LEFT_MARGIN() - min_text_width - scale_width(2),
-      m_chart_size.height() - scale_height(8), min_text);
+    draw_y_axis_label(painter, scale_height(6),
+      scalar_to_string(m_maximum_value));
+    draw_y_axis_label(painter, scale_height(75), scalar_to_string(
+      (m_maximum_value - m_minimum_value) / 2 + m_minimum_value));
+    draw_y_axis_label(painter, m_chart_size.height() - scale_height(6),
+      scalar_to_string(m_minimum_value));
     auto snap_size = static_cast<int>((m_chart_size.width() -
       (2 * CHART_PADDING())) / m_chart_points.size() / 2);
     for(auto point = m_chart_points.begin(); point != m_chart_points.end();
@@ -305,7 +293,7 @@ void HistoricalOrderImbalanceChartView::draw_x_axis_label(QPainter& painter,
 void HistoricalOrderImbalanceChartView::draw_x_axis_label(QPainter& painter,
     const QPoint& point, const boost::posix_time::ptime& timestamp,
     const QColor& background_color, const QColor& text_color) {
-  painter.setPen(Qt::black);
+  painter.setPen(QColor("#333333"));
   painter.drawLine(point.x(), m_chart_size.height(), point.x(),
     m_chart_size.height() + scale_height(2));
   painter.fillRect(point.x() - scale_width(29), m_chart_size.height(),
@@ -326,6 +314,17 @@ void HistoricalOrderImbalanceChartView::draw_x_axis_label(QPainter& painter,
   auto time_text_pos = QPoint(point.x() - (time_text_width / 2),
     m_chart_size.height() + scale_height(25));
   painter.drawText(time_text_pos, time_text);
+}
+
+void HistoricalOrderImbalanceChartView::draw_y_axis_label(QPainter& painter,
+    int pos_y, const QString& text) {
+  painter.setPen(QColor("#333333"));
+  painter.drawLine(LEFT_MARGIN() - scale_width(2), pos_y, LEFT_MARGIN(),
+    pos_y);
+  auto text_width = m_font_metrics.horizontalAdvance(text);
+  painter.setFont(m_label_font);
+  painter.drawText(LEFT_MARGIN() - text_width - scale_width(4),
+    pos_y + scale_height(4), text);
 }
 
 QString HistoricalOrderImbalanceChartView::scalar_to_string(
