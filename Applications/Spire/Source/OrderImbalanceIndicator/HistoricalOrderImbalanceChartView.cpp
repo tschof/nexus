@@ -158,6 +158,11 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     draw_line(painter, point1, point2);
     draw_point(painter, point1);
     draw_point(painter, point2);
+    auto label_text = scalar_to_string(Scalar(
+      m_chart_points.front().m_imbalance.m_size));
+    auto mid_text_width = m_font_metrics.horizontalAdvance(label_text);
+    painter.drawText(LEFT_MARGIN() - mid_text_width - scale_width(2),
+      scale_height(75), label_text);
     if(m_cursor_pos) {
       if(m_cursor_pos->x() < (m_chart_size.width() / 2) + LEFT_MARGIN()) {
         m_crosshair_point = ChartPoint(point1,
@@ -201,7 +206,7 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     }
     // TODO: forces the points to draw on top of lines, but look into
     //       how to avoid looping over this twice.
-    if(static_cast<int>(m_chart_points.size()) * scale_width(12) <
+    if(static_cast<int>(m_chart_points.size()) * scale_width(8) <
         m_chart_size.width()) {
       for(auto& point : m_chart_points) {
         draw_point(painter, point.m_point);
@@ -270,10 +275,10 @@ void HistoricalOrderImbalanceChartView::draw_hover_widgets(QPainter& painter,
     label_pos.y() + scale_height(12));
   painter.drawText(text_pos, text);
   painter.setBrush(Qt::white);
-  painter.drawEllipse(point, scale_width(6), scale_width(6));
+  painter.drawEllipse(point, scale_width(4), scale_width(4));
   painter.setPen(QColor("#36BB55"));
   painter.setBrush(QColor("#36BB55"));
-  painter.drawEllipse(point, scale_width(4), scale_width(4));
+  painter.drawEllipse(point, scale_width(3), scale_width(3));
 }
 
 void HistoricalOrderImbalanceChartView::draw_line(QPainter& painter,
@@ -286,10 +291,10 @@ void HistoricalOrderImbalanceChartView::draw_point(QPainter& painter,
     const QPoint& point) {
   painter.setPen(Qt::white);
   painter.setBrush(Qt::white);
-  painter.drawEllipse(point, scale_width(6), scale_width(6));
+  painter.drawEllipse(point, scale_width(4), scale_width(4));
   painter.setPen(QColor("#4B23A0"));
   painter.setBrush(QColor("#4b23A0"));
-  painter.drawEllipse(point, scale_width(4), scale_width(4));
+  painter.drawEllipse(point, scale_width(3), scale_width(3));
 }
 
 void HistoricalOrderImbalanceChartView::draw_x_axis_label(QPainter& painter,
