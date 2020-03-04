@@ -338,13 +338,7 @@ QVariant HistoricalOrderImbalanceChartView::get_value(Scalar value) const {
 
 QVariant HistoricalOrderImbalanceChartView::get_value(
     const Nexus::OrderImbalance& imbalance) const {
-  if(m_display_type == DisplayType::REFERENCE_PRICE) {
-    return QVariant::fromValue<Money>(imbalance.m_referencePrice);
-  } else if(m_display_type == DisplayType::SIZE) {
-    return QVariant::fromValue<Quantity>(imbalance.m_size);
-  }
-  return QVariant::fromValue<Money>(imbalance.m_size *
-    imbalance.m_referencePrice);
+  return get_value(get_scalar(imbalance));
 }
 
 
