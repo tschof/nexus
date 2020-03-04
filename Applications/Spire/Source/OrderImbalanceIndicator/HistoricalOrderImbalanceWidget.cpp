@@ -2,7 +2,6 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QVBoxLayout>
-#include "Spire/OrderImbalanceIndicator/HistoricalOrderImbalanceChartView.hpp"
 #include "Spire/Spire/Dimensions.hpp"
 #include "Spire/Ui/DropDownMenu.hpp"
 
@@ -29,9 +28,20 @@ HistoricalOrderImbalanceWidget::HistoricalOrderImbalanceWidget(
       font-size: %1px;
     )").arg(scale_height(12)));
   dropdown_layout->addWidget(label);
-  m_data_dropdown = new DropDownMenu({tr("Reference Price"), tr("Size"),
-    tr("Notional Value")});
+  auto reference_text = tr("Reference Price");
+  m_display_options[reference_text] =
+    HistoricalOrderImbalanceChartView::DisplayType::REFERENCE_PRICE;
+  auto size_text = tr("Size");
+  m_display_options[size_text] =
+    HistoricalOrderImbalanceChartView::DisplayType::SIZE;
+  auto value_text = tr("Notional Value");
+  m_display_options[value_text] =
+    HistoricalOrderImbalanceChartView::DisplayType::NOTIONAL_VALUE;
+  m_data_dropdown = new DropDownMenu({reference_text, size_text, value_text});
   m_data_dropdown->setFixedSize(scale(110, 26));
+  m_data_dropdown->connect_selected_signal([=] (auto& text) {
+      on_dropdown_changed(text);
+    });
   dropdown_layout->addWidget(m_data_dropdown);
   dropdown_layout->addStretch(1);
   layout->addSpacing(scale_height(8));
@@ -39,4 +49,8 @@ HistoricalOrderImbalanceWidget::HistoricalOrderImbalanceWidget(
     this);
   m_chart_widget->setFixedHeight(scale_height(185));
   layout->addWidget(m_chart_widget);
+}
+
+void HistoricalOrderImbalanceWidget::on_dropdown_changed(const QString& text) {
+  m_chart_widget->set_display_type(m_display_options[text]);
 }

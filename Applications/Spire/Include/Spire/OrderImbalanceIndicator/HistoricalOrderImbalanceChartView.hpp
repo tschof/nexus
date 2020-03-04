@@ -73,10 +73,12 @@ namespace Spire {
         const QColor& background_color, const QColor& text_color);
       void draw_y_axis_label(QPainter& painter, int pos_y,
         const QString& text);
-      QString imbalance_to_string(
-        const Nexus::OrderImbalance& imbalance) const;
+      Scalar get_scalar(const Nexus::OrderImbalance& imbalance) const;
+      QVariant get_value(Scalar value) const;
+      QVariant get_value(const Nexus::OrderImbalance& imbalance) const;
       int left_margin() const;
-      QString scalar_to_string(Scalar value) const;
+      QString to_string(Scalar value) const;
+      QString to_string(const Nexus::OrderImbalance& imbalance) const;
       void update_points();
   };
 }

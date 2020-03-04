@@ -59,6 +59,11 @@ HistoricalOrderImbalanceChartView::HistoricalOrderImbalanceChartView(
   update_points();
 }
 
+void HistoricalOrderImbalanceChartView::set_display_type(DisplayType type) {
+  m_display_type = type;
+  update_points();
+}
+
 void HistoricalOrderImbalanceChartView::leaveEvent(QEvent* event) {
   m_cursor_pos = boost::none;
 }
@@ -154,7 +159,7 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     draw_point(painter, point1);
     draw_point(painter, point2);
     draw_y_axis_label(painter, m_chart_points.front().m_point.y(),
-      scalar_to_string(Scalar(m_chart_points.front().m_imbalance.m_size)));
+      to_string(m_chart_points.front().m_imbalance));
     if(m_cursor_pos) {
       if(m_cursor_pos->x() < (m_chart_size.width() / 2) + left_margin()) {
         m_crosshair_point = ChartPoint(point1,
@@ -165,12 +170,11 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
       }
     }
   } else {
-    draw_y_axis_label(painter, scale_height(6),
-      scalar_to_string(m_maximum_value));
-    draw_y_axis_label(painter, scale_height(75), scalar_to_string(
+    draw_y_axis_label(painter, scale_height(6), to_string(m_maximum_value));
+    draw_y_axis_label(painter, scale_height(75), to_string(
       (m_maximum_value - m_minimum_value) / 2 + m_minimum_value));
     draw_y_axis_label(painter, m_chart_size.height() - scale_height(6),
-      scalar_to_string(m_minimum_value));
+      to_string(m_minimum_value));
     auto snap_size = static_cast<int>((m_chart_size.width() -
       (2 * CHART_PADDING())) / m_chart_points.size() / 2);
     for(auto point = m_chart_points.begin(); point != m_chart_points.end();
@@ -250,8 +254,7 @@ void HistoricalOrderImbalanceChartView::draw_hover_widgets(QPainter& painter,
     scale_height(18));
   painter.setFont(m_label_font);
   auto locale = QLocale();
-  auto text = m_item_delegate->displayText(scalar_to_string(
-    Scalar(m_crosshair_point->m_imbalance.m_size)), QLocale());
+  auto text = to_string(m_crosshair_point->m_imbalance);
   auto text_width = m_font_metrics.horizontalAdvance(text);
   auto text_pos = QPoint(point.x() - (text_width / 2),
     label_pos.y() + scale_height(12));
@@ -321,19 +324,50 @@ void HistoricalOrderImbalanceChartView::draw_y_axis_label(QPainter& painter,
     pos_y + scale_height(4), text);
 }
 
+Scalar HistoricalOrderImbalanceChartView::get_scalar(
+    const OrderImbalance& imbalance) const {
+  if(m_display_type == DisplayType::REFERENCE_PRICE) {
+    return Scalar(imbalance.m_referencePrice);
+  } else if(m_display_type == DisplayType::SIZE) {
+    return Scalar(imbalance.m_size);
+  }
+  return Scalar(imbalance.m_size * imbalance.m_referencePrice);
+}
+
+QVariant HistoricalOrderImbalanceChartView::get_value(Scalar value) const {
+  if(m_display_type == DisplayType::REFERENCE_PRICE) {
+    return QVariant::fromValue<Money>(static_cast<Money>(value));
+  } else if(m_display_type == DisplayType::SIZE) {
+    return QVariant::fromValue<Quantity>(static_cast<Quantity>(value));
+  }
+  return QVariant::fromValue<Money>(static_cast<Money>(value));
+}
+
+QVariant HistoricalOrderImbalanceChartView::get_value(
+    const Nexus::OrderImbalance& imbalance) const {
+  if(m_display_type == DisplayType::REFERENCE_PRICE) {
+    return QVariant::fromValue<Money>(imbalance.m_referencePrice);
+  } else if(m_display_type == DisplayType::SIZE) {
+    return QVariant::fromValue<Quantity>(imbalance.m_size);
+  }
+  return QVariant::fromValue<Money>(imbalance.m_size *
+    imbalance.m_referencePrice);
+}
+
+
 int HistoricalOrderImbalanceChartView::left_margin() const {
-  return m_font_metrics.horizontalAdvance(scalar_to_string(m_maximum_value)) +
+  return m_font_metrics.horizontalAdvance(to_string(m_maximum_value)) +
     scale_width(4);
 }
 
-QString HistoricalOrderImbalanceChartView::scalar_to_string(
+QString HistoricalOrderImbalanceChartView::to_string(
     Scalar value) const {
-  if(m_display_type == DisplayType::REFERENCE_PRICE) {
-    return m_item_delegate->displayText(QVariant::fromValue<Money>(
-      static_cast<Money>(value)), QLocale());
-  }
-  return m_item_delegate->displayText(QVariant::fromValue<Quantity>(
-    static_cast<Quantity>(value)), QLocale());
+  return m_item_delegate->displayText(get_value(value), QLocale());
+}
+
+QString HistoricalOrderImbalanceChartView::to_string(
+    const OrderImbalance& imbalance) const {
+  return m_item_delegate->displayText(get_value(imbalance), QLocale());
 }
 
 void HistoricalOrderImbalanceChartView::update_points() {
@@ -343,8 +377,8 @@ void HistoricalOrderImbalanceChartView::update_points() {
   for(auto& imbalance : m_imbalances) {
     if(m_interval.lower() <= imbalance.m_timestamp &&
         imbalance.m_timestamp <= m_interval.upper()) {
-      m_minimum_value = min(m_minimum_value, Scalar(imbalance.m_size));
-      m_maximum_value = max(m_maximum_value, Scalar(imbalance.m_size));
+      m_minimum_value = min(m_minimum_value, get_scalar(imbalance));
+      m_maximum_value = max(m_maximum_value, get_scalar(imbalance));
     }
   }
   auto chart_drawable_width = m_chart_size.width() - (2 * CHART_PADDING());
@@ -369,9 +403,7 @@ void HistoricalOrderImbalanceChartView::update_points() {
     auto x = left_margin() + CHART_PADDING() +
       static_cast<int>(static_cast<double>(chart_drawable_width) /
       static_cast<double>(data_point_count - 1) * static_cast<double>(index));
-    auto y = map_to(lower_index->m_size,
-      static_cast<Nexus::Quantity>(m_maximum_value),
-      static_cast<Nexus::Quantity>(m_minimum_value),
+    auto y = map_to(get_scalar(*lower_index), m_maximum_value, m_minimum_value,
       0 + scale_height(5), m_chart_size.height() - scale_height(8));
     m_chart_points.emplace_back(QPoint(x, y), *lower_index);
   }
