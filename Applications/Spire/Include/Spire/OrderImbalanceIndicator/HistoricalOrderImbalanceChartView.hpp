@@ -38,12 +38,7 @@ namespace Spire {
     private:
       struct ChartPoint {
         QPoint m_point;
-        Nexus::OrderImbalance m_imbalance;
-
-        ChartPoint(const QPoint& point,
-          const Nexus::OrderImbalance& imbalance)
-          : m_point(point),
-            m_imbalance(std::move(imbalance)) {}
+        Nexus::OrderImbalance* m_imbalance;
       };
 
       std::vector<Nexus::OrderImbalance> m_imbalances;
@@ -52,7 +47,7 @@ namespace Spire {
       Scalar m_minimum_value;
       Scalar m_maximum_value;
       boost::optional<QPoint> m_cursor_pos;
-      boost::optional<ChartPoint> m_crosshair_point;
+      ChartPoint m_crosshair_point;
       QFont m_label_font;
       QFontMetrics m_font_metrics;
       bool m_is_dragging;
