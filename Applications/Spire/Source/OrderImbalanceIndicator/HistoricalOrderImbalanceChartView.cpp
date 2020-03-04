@@ -31,7 +31,6 @@ namespace {
   }
 
   const auto& CURSOR() {
-    // TODO: replace with proper cursor file
     static auto cursor = QCursor(QPixmap::fromImage(
       imageFromSvg(":/Icons/chart-cursor-reversed.svg", scale(18, 18))));
     return cursor;
@@ -125,35 +124,24 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     m_chart_size.height());
   painter.drawLine(left_margin(), m_chart_size.height(),
     width() - RIGHT_MARGIN(), m_chart_size.height());
-  auto label_count = min(static_cast<int>(m_chart_points.size()), 5);
-  if(m_chart_points.size() == 1) {
-    auto point = m_chart_points.front().m_point;
-    draw_x_axis_label(painter, point.x(),
-      m_chart_points.front().m_imbalance->m_timestamp);
-    draw_x_axis_label(painter, point.x() + m_chart_size.width() -
-      (2 * CHART_PADDING()), m_chart_points.front().m_imbalance->m_timestamp);
-  } else {
-    for(auto i = 0; i < label_count; ++i) {
-      auto index = map_to(i, 0, label_count - 1, 0, m_chart_points.size() - 1);
-      auto& point = m_chart_points[index];
-      draw_x_axis_label(painter, point.m_point.x(),
-        point.m_imbalance->m_timestamp);
-    }
-  }
   auto gradient = QLinearGradient(0, m_chart_size.height(), 0, 0);
   gradient.setColorAt(0, QColor("#E2E0FF"));
   gradient.setColorAt(1, Qt::white);
   painter.fillRect(left_margin() + CHART_PADDING(), 0,
     m_chart_size.width() - (2 * CHART_PADDING()),
     m_chart_size.height() - scale_height(1), gradient);
-  auto cover = QPolygon();
-  cover << QPoint(left_margin() + scale_width(1), 0) << QPoint(width(), 0);
   if(m_chart_points.size() == 1) {
+    auto point = m_chart_points.front().m_point;
+    draw_x_axis_label(painter, point.x(),
+      m_chart_points.front().m_imbalance->m_timestamp);
+    draw_x_axis_label(painter, point.x() + m_chart_size.width() -
+      (2 * CHART_PADDING()), m_chart_points.front().m_imbalance->m_timestamp);
     auto point1 = m_chart_points.front().m_point;
     point1.setX(left_margin() + CHART_PADDING());
     auto point2 = m_chart_points.front().m_point;
     point2.setX(point1.x() + m_chart_size.width() - (2 * CHART_PADDING()));
     draw_line(painter, point1, point2);
+    draw_gradient_cover(painter);
     draw_point(painter, point1);
     draw_point(painter, point2);
     draw_y_axis_label(painter, m_chart_points.front().m_point.y(),
@@ -168,6 +156,13 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
       }
     }
   } else {
+    auto label_count = min(static_cast<int>(m_chart_points.size()), 5);
+    for(auto i = 0; i < label_count; ++i) {
+      auto index = map_to(i, 0, label_count - 1, 0, m_chart_points.size() - 1);
+      auto& point = m_chart_points[index];
+      draw_x_axis_label(painter, point.m_point.x(),
+        point.m_imbalance->m_timestamp);
+    }
     draw_y_axis_label(painter, scale_height(6), to_string(m_maximum_value));
     draw_y_axis_label(painter, scale_height(75), to_string(
       (m_maximum_value - m_minimum_value) / 2 + m_minimum_value));
@@ -188,8 +183,7 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
         }
       }
     }
-    // TODO: forces the points to draw on top of lines, but look into
-    //       how to avoid looping over this twice.
+    draw_gradient_cover(painter);
     if(static_cast<int>(m_chart_points.size()) * scale_width(8) <
         m_chart_size.width()) {
       for(auto& point : m_chart_points) {
@@ -232,6 +226,13 @@ void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
   }
   update_points();
   update();
+}
+
+void HistoricalOrderImbalanceChartView::draw_gradient_cover(
+    QPainter& painter) const {
+  painter.setPen(Qt::NoPen);
+  painter.setBrush(Qt::white);
+  painter.drawPolygon(m_gradient_cover);
 }
 
 void HistoricalOrderImbalanceChartView::draw_hover_widgets(QPainter& painter) {
@@ -384,9 +385,14 @@ void HistoricalOrderImbalanceChartView::update_points() {
       return item.m_timestamp > value;
     });
   auto data_point_count = std::distance(lower_index, upper_index);
+  m_gradient_cover = QPolygon();
+  m_gradient_cover << QPoint(left_margin() + scale_width(1), 0);
   if(data_point_count == 1) {
-    m_chart_points.push_back({QPoint(left_margin() + CHART_PADDING(),
-      m_chart_size.height() / 2), &*lower_index});
+    auto point = QPoint(left_margin() + CHART_PADDING(),
+      m_chart_size.height() / 2);
+    m_chart_points.push_back({point, &*lower_index});
+    m_gradient_cover << point <<
+      point + QPoint(width(), 0) << QPoint(width(), 0);
     return;
   }
   auto start_index = lower_index;
@@ -399,6 +405,8 @@ void HistoricalOrderImbalanceChartView::update_points() {
     auto y = map_to(get_scalar(*lower_index), m_maximum_value, m_minimum_value,
       0 + scale_height(5), m_chart_size.height() - scale_height(8));
     m_chart_points.push_back({QPoint(x, y), &*lower_index});
+    m_gradient_cover << QPoint(x, y);
   }
+  m_gradient_cover << QPoint(width(), 0);
   update();
 }

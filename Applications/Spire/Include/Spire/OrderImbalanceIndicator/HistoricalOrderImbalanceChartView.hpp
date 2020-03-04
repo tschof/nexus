@@ -56,7 +56,9 @@ namespace Spire {
       QPen m_dashed_line_pen;
       CustomVariantItemDelegate* m_item_delegate;
       DisplayType m_display_type;
+      QPolygon m_gradient_cover;
 
+      void draw_gradient_cover(QPainter& painter) const;
       void draw_hover_widgets(QPainter& painter);
       void draw_line(QPainter& painter, const QPoint& point1,
         const QPoint& point2);
