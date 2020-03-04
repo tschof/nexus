@@ -70,9 +70,6 @@ void HistoricalOrderImbalanceChartView::leaveEvent(QEvent* event) {
 }
 
 void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
-  if(m_imbalances.empty()) {
-    return;
-  }
   if(QRect(left_margin(), 0, m_chart_size.width(), m_chart_size.height())
       .contains(event->pos())) {
     m_cursor_pos = event->pos();
@@ -220,9 +217,6 @@ void HistoricalOrderImbalanceChartView::resizeEvent(QResizeEvent* event) {
 }
 
 void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
-  if(m_imbalances.empty()) {
-    return;
-  }
   auto chart_range = m_interval.upper() - m_interval.lower();
   if(event->angleDelta().y() < 0) {
     if(m_interval.lower() > m_imbalances.front().m_timestamp ||
