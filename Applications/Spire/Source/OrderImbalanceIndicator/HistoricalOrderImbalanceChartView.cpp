@@ -130,6 +130,7 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
   painter.fillRect(left_margin() + CHART_PADDING(), 0,
     m_chart_size.width() - (2 * CHART_PADDING()),
     m_chart_size.height() - scale_height(1), gradient);
+  draw_gradient_cover(painter);
   if(m_chart_points.size() == 1) {
     auto point = m_chart_points.front().m_point;
     draw_x_axis_label(painter, point.x(),
@@ -141,7 +142,6 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     auto point2 = m_chart_points.front().m_point;
     point2.setX(point1.x() + m_chart_size.width() - (2 * CHART_PADDING()));
     draw_line(painter, point1, point2);
-    draw_gradient_cover(painter);
     draw_point(painter, point1);
     draw_point(painter, point2);
     draw_y_axis_label(painter, m_chart_points.front().m_point.y(),
@@ -183,7 +183,6 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
         }
       }
     }
-    draw_gradient_cover(painter);
     if(static_cast<int>(m_chart_points.size()) * scale_width(8) <
         m_chart_size.width()) {
       for(auto& point : m_chart_points) {
