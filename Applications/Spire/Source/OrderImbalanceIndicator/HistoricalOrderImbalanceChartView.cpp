@@ -84,17 +84,8 @@ void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
     if(pixel_delta != 0) {
       auto chart_delta = (m_interval.upper() - m_interval.lower()) / 100 *
         pixel_delta;
-      if(event->x() < m_last_mouse_pos.x()) {
-          if(m_imbalances.back().m_timestamp >= m_interval.upper()) {
-            m_interval = {m_interval.lower() - chart_delta,
-              m_interval.upper() - chart_delta};
-          }
-      } else {
-        if(m_imbalances.front().m_timestamp <= m_interval.lower()) {
-          m_interval = {m_interval.lower() - chart_delta,
-            m_interval.upper() - chart_delta};
-        }
-      }
+      m_interval = {m_interval.lower() - chart_delta,
+        m_interval.upper() - chart_delta};
       m_last_mouse_pos = event->pos();
       update_points();
     }
