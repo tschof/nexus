@@ -81,7 +81,7 @@ void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
     m_cursor_pos = boost::none;
     setCursor(Qt::ArrowCursor);
   }
-  if(m_is_dragging) {
+  if(m_is_dragging && m_chart_points.size() > 1) {
     auto pixel_delta = static_cast<int>(
       static_cast<double>(event->x() - m_last_mouse_pos.x()) /
       static_cast<double>(m_chart_size.width()) * PAN);
