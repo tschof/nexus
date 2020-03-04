@@ -84,8 +84,15 @@ void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
     if(pixel_delta != 0) {
       auto chart_delta = (m_interval.upper() - m_interval.lower()) / 100 *
         pixel_delta;
-      m_interval = {m_interval.lower() - chart_delta,
-        m_interval.upper() - chart_delta};
+      if(event->x() < m_last_mouse_pos.x() &&
+            m_imbalances.back().m_timestamp >= m_interval.upper()) {
+        m_interval = {m_interval.lower() - chart_delta,
+          m_interval.upper() - chart_delta};
+      } else if(event->x() > m_last_mouse_pos.x() &&
+          m_imbalances.front().m_timestamp <= m_interval.lower()) {
+        m_interval = {m_interval.lower() - chart_delta,
+          m_interval.upper() - chart_delta};
+      }
       m_last_mouse_pos = event->pos();
       update_points();
     }
@@ -206,7 +213,9 @@ void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
     if(m_interval.lower() > m_imbalances.front().m_timestamp ||
         m_interval.upper() < m_imbalances.back().m_timestamp) {
       auto zoom = (chart_range - ((chart_range * ZOOM) / 100)) / 2;
-      m_interval = {m_interval.lower() + zoom, m_interval.upper() - zoom};
+      m_interval = {
+        max(m_imbalances.front().m_timestamp, m_interval.lower() + zoom),
+        min(m_imbalances.back().m_timestamp, m_interval.upper() - zoom)};
     }
   } else {
     if(m_chart_points.size() > 1) {
