@@ -206,7 +206,7 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
     draw_x_axis_label(painter, m_crosshair_point.m_point.x(),
       m_crosshair_point.m_imbalance->m_timestamp, QColor("#333333"),
       Qt::white);
-    draw_hover_widgets(painter, m_crosshair_point.m_point);
+    draw_hover_widgets(painter);
   }
 }
 
@@ -234,23 +234,21 @@ void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
   update();
 }
 
-// TODO: remove point parameter, just use m_crosshair_point
-void HistoricalOrderImbalanceChartView::draw_hover_widgets(QPainter& painter,
-    const QPoint& point) {
+void HistoricalOrderImbalanceChartView::draw_hover_widgets(QPainter& painter) {
+  painter.setFont(m_label_font);
+  auto text = to_string(*(m_crosshair_point.m_imbalance));
+  auto text_width = m_font_metrics.horizontalAdvance(text);
+  auto rect_width = max(scale_width(47), text_width + scale_width(20));
+  auto point = m_crosshair_point.m_point;
   auto label_pos = [&] {
-      if(point.y() > scale_height(32)) {
-        return point - QPoint(scale_width(23), scale_height(28));
+      if(m_crosshair_point.m_point.y() > scale_height(32)) {
+        return point - QPoint(rect_width / 2, scale_height(28));
       }
-      return point + QPoint(-scale_width(23), scale_height(10));
+      return point + QPoint(-rect_width / 2, scale_height(10));
     }();
   painter.setPen({Qt::white, 2});
   painter.setBrush(QColor("#36BB55"));
-  painter.drawRect(label_pos.x(), label_pos.y(), scale_width(47),
-    scale_height(18));
-  painter.setFont(m_label_font);
-  auto locale = QLocale();
-  auto text = to_string(*(m_crosshair_point.m_imbalance));
-  auto text_width = m_font_metrics.horizontalAdvance(text);
+  painter.drawRect(label_pos.x(), label_pos.y(), rect_width, scale_height(18));
   auto text_pos = QPoint(point.x() - (text_width / 2),
     label_pos.y() + scale_height(12));
   painter.drawText(text_pos, text);

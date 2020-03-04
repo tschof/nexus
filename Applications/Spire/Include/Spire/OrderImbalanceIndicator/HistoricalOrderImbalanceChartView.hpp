@@ -57,7 +57,7 @@ namespace Spire {
       CustomVariantItemDelegate* m_item_delegate;
       DisplayType m_display_type;
 
-      void draw_hover_widgets(QPainter& painter, const QPoint& point);
+      void draw_hover_widgets(QPainter& painter);
       void draw_line(QPainter& painter, const QPoint& point1,
         const QPoint& point2);
       void draw_point(QPainter& painter, const QPoint& point);
