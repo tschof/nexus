@@ -1,10 +1,12 @@
 #ifndef SPIRE_HISTORICAL_ORDER_IMBALANCE_CHART_VIEW_HPP
 #define SPIRE_HISTORICAL_ORDER_IMBALANCE_CHART_VIEW_HPP
+#include <QLabel>
 #include <QPen>
 #include <QWidget>
 #include "Nexus/Definitions/OrderImbalance.hpp"
 #include "Spire/OrderImbalanceIndicator/OrderImbalanceIndicator.hpp"
 #include "Spire/Spire/Intervals.hpp"
+#include "Spire/Spire/QtPromise.hpp"
 #include "Spire/Spire/Scalar.hpp"
 #include "Spire/Ui/CustomQtVariants.hpp"
 
@@ -60,7 +62,9 @@ namespace Spire {
         Nexus::OrderImbalance* m_imbalance;
       };
 
+      std::shared_ptr<OrderImbalanceIndicatorModel> m_model;
       std::vector<Nexus::OrderImbalance> m_imbalances;
+      QtPromise<std::vector<Nexus::OrderImbalance>> m_load_promise;
       std::vector<ChartPoint> m_chart_points;
       TimeInterval m_interval;
       Scalar m_minimum_value;
@@ -76,6 +80,7 @@ namespace Spire {
       CustomVariantItemDelegate* m_item_delegate;
       DisplayType m_display_type;
       QPolygon m_gradient_cover;
+      std::unique_ptr<QLabel> m_loading_label;
 
       void draw_gradient_cover(QPainter& painter) const;
       void draw_hover_widgets(QPainter& painter);
@@ -93,9 +98,12 @@ namespace Spire {
       QVariant get_value(Scalar value) const;
       QVariant get_value(const Nexus::OrderImbalance& imbalance) const;
       int left_margin() const;
+      void load_data();
       QString to_string(Scalar value) const;
       QString to_string(const Nexus::OrderImbalance& imbalance) const;
       void update_points();
+      void on_data_loaded(
+        const std::vector<Nexus::OrderImbalance>& imbalances);
   };
 }
 

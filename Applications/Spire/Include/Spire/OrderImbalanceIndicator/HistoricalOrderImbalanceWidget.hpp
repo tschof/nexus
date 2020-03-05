@@ -22,7 +22,7 @@ namespace Spire {
         \param parent The parent widget.
       */
       HistoricalOrderImbalanceWidget(const TimeInterval& interval,
-        const std::vector<Nexus::OrderImbalance>& imbalances,
+        std::shared_ptr<OrderImbalanceIndicatorModel> model,
         QWidget* parent = nullptr);
 
     private:

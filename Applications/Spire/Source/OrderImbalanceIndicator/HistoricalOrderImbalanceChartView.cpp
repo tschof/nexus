@@ -1,6 +1,7 @@
 #include "Spire/OrderImbalanceIndicator/HistoricalOrderImbalanceChartView.hpp"
 #include <QDate>
 #include <QMouseEvent>
+#include <QMovie>
 #include <QPainter>
 #include <QPaintEvent>
 #include <QWheelEvent>
@@ -39,9 +40,9 @@ namespace {
 
 HistoricalOrderImbalanceChartView::HistoricalOrderImbalanceChartView(
     const TimeInterval& interval,
-    const std::vector<Nexus::OrderImbalance>& imbalances, QWidget* parent)
+    std::shared_ptr<OrderImbalanceIndicatorModel> model, QWidget* parent)
     : QWidget(parent),
-      m_imbalances(imbalances),
+      m_model(std::move(model)),
       m_interval(interval),
       m_crosshair_point{QPoint(), nullptr},
       m_label_font("Roboto"),
@@ -56,7 +57,7 @@ HistoricalOrderImbalanceChartView::HistoricalOrderImbalanceChartView(
   m_label_font.setPixelSize(scale_height(10));
   m_font_metrics = QFontMetrics(m_label_font);
   m_item_delegate = new CustomVariantItemDelegate(this);
-  update_points();
+  load_data();
 }
 
 void HistoricalOrderImbalanceChartView::set_display_type(DisplayType type) {
@@ -69,6 +70,9 @@ void HistoricalOrderImbalanceChartView::leaveEvent(QEvent* event) {
 }
 
 void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
+  if(m_loading_label != nullptr) {
+    return;
+  }
   if(QRect(left_margin(), 0, m_chart_size.width(), m_chart_size.height())
       .contains(event->pos())) {
     m_cursor_pos = event->pos();
@@ -94,7 +98,7 @@ void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
           m_interval.upper() - chart_delta};
       }
       m_last_mouse_pos = event->pos();
-      update_points();
+      load_data();
     }
   }
   update();
@@ -114,6 +118,10 @@ void HistoricalOrderImbalanceChartView::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
+  if(m_loading_label != nullptr) {
+    m_loading_label->resize(width(), height());
+    return;
+  }
   auto painter = QPainter(this);
   painter.setRenderHint(QPainter::Antialiasing);
   painter.fillRect(event->rect(), Qt::white);
@@ -211,20 +219,21 @@ void HistoricalOrderImbalanceChartView::resizeEvent(QResizeEvent* event) {
 void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
   auto chart_range = m_interval.upper() - m_interval.lower();
   if(event->angleDelta().y() < 0) {
-    if(m_interval.lower() > m_imbalances.front().m_timestamp ||
-        m_interval.upper() < m_imbalances.back().m_timestamp) {
+    // TODO: limit the interval to available data/a max size.
+    //       maybe store the last_good_interval and revert to it in update_points
+    //       
+    //if(m_interval.lower() >= m_imbalances.front().m_timestamp ||
+    //    m_interval.upper() <= m_imbalances.back().m_timestamp) {
       auto zoom = (chart_range - ((chart_range * ZOOM) / 100)) / 2;
-      m_interval = {
-        max(m_imbalances.front().m_timestamp, m_interval.lower() + zoom),
-        min(m_imbalances.back().m_timestamp, m_interval.upper() - zoom)};
-    }
+      m_interval = {m_interval.lower() + zoom, m_interval.upper() - zoom};
+    //}
   } else {
     if(m_chart_points.size() > 1) {
       auto zoom = ((chart_range * 100) / ZOOM - chart_range) / 2;
       m_interval = {m_interval.lower() - zoom, m_interval.upper() + zoom};
     }
   }
-  update_points();
+  load_data();
   update();
 }
 
@@ -348,6 +357,22 @@ int HistoricalOrderImbalanceChartView::left_margin() const {
     scale_width(4);
 }
 
+void HistoricalOrderImbalanceChartView::load_data() {
+  m_load_promise = m_model->load(m_interval);
+  m_load_promise.then([=] (auto& result) {
+      on_data_loaded(std::move(result.Get()));
+    });
+  m_loading_label = std::make_unique<QLabel>(this);
+  auto logo = new QMovie(":/Icons/pre-loader.gif", QByteArray(), this);
+  logo->setScaledSize(scale(32, 32));
+  m_loading_label->setMovie(logo);
+  m_loading_label->setStyleSheet(QString(
+    "background-color: white; padding-top: %1px;").arg(scale_height(50)));
+  m_loading_label->setAlignment(Qt::AlignHCenter);
+  m_loading_label->movie()->start();
+  m_loading_label->move(0, 0);
+}
+
 QString HistoricalOrderImbalanceChartView::to_string(
     Scalar value) const {
   return m_item_delegate->displayText(get_value(value), QLocale());
@@ -370,6 +395,8 @@ void HistoricalOrderImbalanceChartView::update_points() {
     }
   }
   auto chart_drawable_width = m_chart_size.width() - (2 * CHART_PADDING());
+  // TODO: no more interval range checking, because the loaded data is already
+  //       in the requested range.
   auto lower_index = std::lower_bound(m_imbalances.begin(), m_imbalances.end(),
     m_interval.lower(), [] (const auto& item, const auto& value) {
       return item.m_timestamp < value;
@@ -403,4 +430,11 @@ void HistoricalOrderImbalanceChartView::update_points() {
   }
   m_gradient_cover << QPoint(width(), 0);
   update();
+}
+
+void HistoricalOrderImbalanceChartView::on_data_loaded(
+    const std::vector<OrderImbalance>& imbalances) {
+  m_imbalances = imbalances;
+  m_loading_label.reset();
+  update_points();
 }

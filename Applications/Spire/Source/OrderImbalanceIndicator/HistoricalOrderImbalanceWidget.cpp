@@ -9,23 +9,23 @@ using namespace Spire;
 
 HistoricalOrderImbalanceWidget::HistoricalOrderImbalanceWidget(
     const TimeInterval& interval,
-    const std::vector<Nexus::OrderImbalance>& imbalances, QWidget* parent)
+    std::shared_ptr<OrderImbalanceIndicatorModel> model, QWidget* parent)
     : QWidget(parent) {
   setStyleSheet("background-color: #FFFFFF;");
   auto layout = new QVBoxLayout(this);
   layout->setContentsMargins(scale_width(26), scale_height(18), scale_width(8),
     scale_height(18));
   layout->setSpacing(0);
-  if(imbalances.empty()) {
-    auto label = new QLabel(tr("Historical data is not available."), this);
-    label->setFixedHeight(scale_height(36));
-    label->setStyleSheet(QString(R"(
-        font-family: Roboto;
-        font-size: %1px;
-        font-style: italic;
-      )").arg(scale_height(12)));
-    layout->addWidget(label);
-  } else {
+  //if(imbalances.empty()) {
+  //  auto label = new QLabel(tr("Historical data is not available."), this);
+  //  label->setFixedHeight(scale_height(36));
+  //  label->setStyleSheet(QString(R"(
+  //      font-family: Roboto;
+  //      font-size: %1px;
+  //      font-style: italic;
+  //    )").arg(scale_height(12)));
+  //  layout->addWidget(label);
+  //} else {
     auto dropdown_layout = new QHBoxLayout();
     dropdown_layout->setContentsMargins({});
     dropdown_layout->setSpacing(0);
@@ -55,11 +55,11 @@ HistoricalOrderImbalanceWidget::HistoricalOrderImbalanceWidget(
     dropdown_layout->addWidget(m_data_dropdown);
     dropdown_layout->addStretch(1);
     layout->addSpacing(scale_height(8));
-    m_chart_widget = new HistoricalOrderImbalanceChartView(interval, imbalances,
-      this);
+    m_chart_widget = new HistoricalOrderImbalanceChartView(interval,
+      std::move(model), this);
     m_chart_widget->setFixedHeight(scale_height(185));
     layout->addWidget(m_chart_widget);
-  }
+  //}
 }
 
 void HistoricalOrderImbalanceWidget::on_dropdown_changed(const QString& text) {
