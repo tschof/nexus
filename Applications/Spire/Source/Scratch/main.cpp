@@ -68,7 +68,12 @@ int main(int argc, char** argv) {
   auto time = boost::posix_time::ptime({2005, 9, 1});
   auto widget = new HistoricalOrderImbalanceWidget(TimeInterval(time,
     time + boost::posix_time::hours(100)), get_imbalances());
-  widget->resize(scale(700, 255));
+  widget->resize(scale_width(700), 10);
   widget->show();
+  auto widget2 = new HistoricalOrderImbalanceWidget(TimeInterval(time,
+    time + boost::posix_time::hours(100)), {});
+  widget2->resize(scale_width(700), 10);
+  widget2->show();
+  widget2->move(widget2->pos().x() + scale_width(750), widget2->y());
   application->exec();
 }
