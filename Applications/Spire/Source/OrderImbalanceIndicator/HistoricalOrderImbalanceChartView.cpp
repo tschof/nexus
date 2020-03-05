@@ -435,6 +435,7 @@ void HistoricalOrderImbalanceChartView::update_points() {
 void HistoricalOrderImbalanceChartView::on_data_loaded(
     const std::vector<OrderImbalance>& imbalances) {
   m_imbalances = imbalances;
+  m_crosshair_point = {QPoint(), nullptr};
   m_loading_label.reset();
   update_points();
 }
