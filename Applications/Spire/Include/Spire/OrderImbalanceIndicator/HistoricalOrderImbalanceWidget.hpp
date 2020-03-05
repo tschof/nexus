@@ -9,9 +9,18 @@
 
 namespace Spire {
 
+  //! Represents a widget for displaying a historical order imbalance chart
+  //! with a dropdown for selecting dislayed values.
   class HistoricalOrderImbalanceWidget : public QWidget {
     public:
 
+      //! Constructs a HistoricalOrderImbalanceWidget with an initial time
+      //! interval and a source imbalance model.
+      /*
+        \param interval The initial time interval the chart will display.
+        \param model The source order imbalance model.
+        \param parent The parent widget.
+      */
       HistoricalOrderImbalanceWidget(const TimeInterval& interval,
         const std::vector<Nexus::OrderImbalance>& imbalances,
         QWidget* parent = nullptr);

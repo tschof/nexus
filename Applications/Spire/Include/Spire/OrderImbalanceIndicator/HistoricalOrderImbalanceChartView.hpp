@@ -10,20 +10,39 @@
 
 namespace Spire {
 
+  //! Displays a chart of historical order imbalances.
   class HistoricalOrderImbalanceChartView : public QWidget {
     public:
 
+      //! Indicates which order imbalance value to display.
       enum class DisplayType {
+
+        //! Option to display the order imbalances' reference price.
         REFERENCE_PRICE,
+
+        //! Option to display the order imbalances' size.
         SIZE,
+
+        //! Optionto dislay the order imbalances' notional value.
         NOTIONAL_VALUE
       };
 
+      //! Constructs a HistoricalOrderImbalanceChartView with an initial
+      //! time interval and source model.
+      /*
+        \param interval The initial time interval the chart will display.
+        \param model The source order imbalance model.
+        \param parent The parent widget.
+      */
       HistoricalOrderImbalanceChartView(
         const TimeInterval& interval,
-        const std::vector<Nexus::OrderImbalance>& imbalances,
+        std::shared_ptr<OrderImbalanceIndicatorModel> model,
         QWidget* parent = nullptr);
 
+      //! Sets the chart's DisplayType.
+      /*
+        \param type The value type to display in the chart.
+      */
       void set_display_type(DisplayType type);
 
     protected:
