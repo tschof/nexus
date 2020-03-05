@@ -176,7 +176,8 @@ void HistoricalOrderImbalanceChartView::paintEvent(QPaintEvent* event) {
       auto pos_x = point->m_point.x();
       if(m_cursor_pos) {
         if(pos_x - snap_size < m_cursor_pos->x() &&
-            m_cursor_pos->x() < pos_x + snap_size) {
+            m_cursor_pos->x() < pos_x + snap_size ||
+            pos_x == m_cursor_pos->x()) {
           m_crosshair_point = *point;
         }
       }
