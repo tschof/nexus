@@ -43,7 +43,7 @@ HistoricalOrderImbalanceChartView::HistoricalOrderImbalanceChartView(
     std::shared_ptr<OrderImbalanceIndicatorModel> model, QWidget* parent)
     : QWidget(parent),
       m_model(std::move(model)),
-      m_interval(interval),
+      m_current_interval(interval),
       m_crosshair_point{QPoint(), nullptr},
       m_label_font("Roboto"),
       m_font_metrics(m_label_font),
@@ -86,17 +86,11 @@ void HistoricalOrderImbalanceChartView::mouseMoveEvent(QMouseEvent* event) {
       static_cast<double>(event->x() - m_last_mouse_pos.x()) /
       static_cast<double>(m_chart_size.width()) * PAN);
     if(pixel_delta != 0) {
-      auto chart_delta = (m_interval.upper() - m_interval.lower()) / 100 *
-        pixel_delta;
-      if(event->x() < m_last_mouse_pos.x() &&
-            m_imbalances.back().m_timestamp >= m_interval.upper()) {
-        m_interval = {m_interval.lower() - chart_delta,
-          m_interval.upper() - chart_delta};
-      } else if(event->x() > m_last_mouse_pos.x() &&
-          m_imbalances.front().m_timestamp <= m_interval.lower()) {
-        m_interval = {m_interval.lower() - chart_delta,
-          m_interval.upper() - chart_delta};
-      }
+      auto chart_delta = (m_current_interval.upper() -
+        m_current_interval.lower()) / 100 * pixel_delta;
+      m_last_good_interval = m_current_interval;
+      m_current_interval = {m_current_interval.lower() - chart_delta,
+        m_current_interval.upper() - chart_delta};
       m_last_mouse_pos = event->pos();
       load_data();
     }
@@ -217,7 +211,7 @@ void HistoricalOrderImbalanceChartView::resizeEvent(QResizeEvent* event) {
 }
 
 void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
-  auto chart_range = m_interval.upper() - m_interval.lower();
+  auto chart_range = m_current_interval.upper() - m_current_interval.lower();
   if(event->angleDelta().y() < 0) {
     // TODO: limit the interval to available data/a max size.
     //       maybe store the last_good_interval and revert to it in update_points
@@ -225,12 +219,16 @@ void HistoricalOrderImbalanceChartView::wheelEvent(QWheelEvent* event) {
     //if(m_interval.lower() >= m_imbalances.front().m_timestamp ||
     //    m_interval.upper() <= m_imbalances.back().m_timestamp) {
       auto zoom = (chart_range - ((chart_range * ZOOM) / 100)) / 2;
-      m_interval = {m_interval.lower() + zoom, m_interval.upper() - zoom};
+      m_last_good_interval = m_current_interval;
+      m_current_interval = {m_current_interval.lower() + zoom,
+        m_current_interval.upper() - zoom};
     //}
   } else {
     if(m_chart_points.size() > 1) {
       auto zoom = ((chart_range * 100) / ZOOM - chart_range) / 2;
-      m_interval = {m_interval.lower() - zoom, m_interval.upper() + zoom};
+      m_last_good_interval = m_current_interval;
+      m_current_interval = {m_current_interval.lower() - zoom,
+        m_current_interval.upper() + zoom};
     }
   }
   load_data();
@@ -358,7 +356,7 @@ int HistoricalOrderImbalanceChartView::left_margin() const {
 }
 
 void HistoricalOrderImbalanceChartView::load_data() {
-  m_load_promise = m_model->load(m_interval);
+  m_load_promise = m_model->load(m_current_interval);
   m_load_promise.then([=] (auto& result) {
       on_data_loaded(std::move(result.Get()));
     });
@@ -387,9 +385,19 @@ void HistoricalOrderImbalanceChartView::update_points() {
   m_minimum_value = Scalar(std::numeric_limits<Nexus::Quantity>::max());
   m_maximum_value = Scalar(0);
   m_chart_points.clear();
+
+
+  // TODO: check that current interval corresponds with loaded data, if not,
+  //       update current interval to reflect data. It may be the case that
+  //       the current data may have to be partially merged with the new data,
+  //       in cases where a pan is slightly out of range. If the user then
+  //       moves back into the normal range the panned amounts may not be equal.
+  //       It may also be the case that it doesn't affect usability at all,
+  //       and just assign the current interval to the loaded data's range.
+
   for(auto& imbalance : m_imbalances) {
-    if(m_interval.lower() <= imbalance.m_timestamp &&
-        imbalance.m_timestamp <= m_interval.upper()) {
+    if(m_current_interval.lower() <= imbalance.m_timestamp &&
+        imbalance.m_timestamp <= m_current_interval.upper()) {
       m_minimum_value = min(m_minimum_value, get_scalar(imbalance));
       m_maximum_value = max(m_maximum_value, get_scalar(imbalance));
     }
@@ -398,11 +406,11 @@ void HistoricalOrderImbalanceChartView::update_points() {
   // TODO: no more interval range checking, because the loaded data is already
   //       in the requested range.
   auto lower_index = std::lower_bound(m_imbalances.begin(), m_imbalances.end(),
-    m_interval.lower(), [] (const auto& item, const auto& value) {
+    m_current_interval.lower(), [] (const auto& item, const auto& value) {
       return item.m_timestamp < value;
     });
   auto upper_index = std::upper_bound(m_imbalances.begin(), m_imbalances.end(),
-    m_interval.upper(), [] (const auto& value, const auto& item) {
+    m_current_interval.upper(), [] (const auto& value, const auto& item) {
       return item.m_timestamp > value;
     });
   auto data_point_count = std::distance(lower_index, upper_index);

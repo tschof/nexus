@@ -66,7 +66,8 @@ namespace Spire {
       std::vector<Nexus::OrderImbalance> m_imbalances;
       QtPromise<std::vector<Nexus::OrderImbalance>> m_load_promise;
       std::vector<ChartPoint> m_chart_points;
-      TimeInterval m_interval;
+      TimeInterval m_current_interval;
+      TimeInterval m_last_good_interval;
       Scalar m_minimum_value;
       Scalar m_maximum_value;
       boost::optional<QPoint> m_cursor_pos;
