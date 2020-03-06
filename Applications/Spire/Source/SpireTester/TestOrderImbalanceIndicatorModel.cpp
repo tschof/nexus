@@ -1,5 +1,6 @@
 #include "Spire/SpireTester/TestOrderImbalanceIndicatorModel.hpp"
 
+using namespace boost::posix_time;
 using namespace Nexus;
 using namespace Spire;
 
@@ -48,6 +49,12 @@ QtPromise<std::vector<Nexus::OrderImbalance>>
     TestOrderImbalanceIndicatorModel::load(
     const Security& security, const TimeInterval& interval) {
   return add_load_entry(std::make_shared<LoadEntry>(security, interval));
+}
+
+QtPromise<std::vector<Nexus::OrderImbalance>>
+    TestOrderImbalanceIndicatorModel::load(const Security& security,
+    const ptime& timestamp, int count) {
+  return {};
 }
 
 SubscriptionResult<boost::optional<Nexus::OrderImbalance>>

@@ -38,6 +38,12 @@ QtPromise<std::vector<OrderImbalance>>
   });
 }
 
+QtPromise<std::vector<Nexus::OrderImbalance>>
+    CachedOrderImbalanceIndicatorModel::load(const Security& security,
+    const ptime& timestamp, int count) {
+  return {};
+}
+
 SubscriptionResult<optional<Nexus::OrderImbalance>>
     CachedOrderImbalanceIndicatorModel::subscribe(
     const OrderImbalanceSignal::slot_type& slot) {

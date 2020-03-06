@@ -41,6 +41,10 @@ namespace Spire {
       virtual QtPromise<std::vector<Nexus::OrderImbalance>> load(
         const Nexus::Security& security, const TimeInterval& interval) = 0;
 
+      virtual QtPromise<std::vector<Nexus::OrderImbalance>> load(
+        const Nexus::Security& security,
+        const boost::posix_time::ptime& timestamp, int count) = 0;
+
       //! Subscribes to real time order imbalances.
       /*!
         \param slot The slot receiving new order imbalances.

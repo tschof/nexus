@@ -20,6 +20,22 @@ namespace {
   const auto C = make_imbalance("C", from_time_t(300));
   const auto D = make_imbalance("D", from_time_t(400));
   const auto E = make_imbalance("E", from_time_t(500));
+
+  auto A1 = make_imbalance("A", from_time_t(100));
+  auto A2 = make_imbalance("A", from_time_t(200));
+  auto A3 = make_imbalance("A", from_time_t(300));
+  auto A4 = make_imbalance("A", from_time_t(400));
+  auto A5 = make_imbalance("A", from_time_t(500));
+
+  auto count_model() {
+    auto model = std::make_unique<LocalOrderImbalanceIndicatorModel>();
+    model->insert(A1);
+    model->insert(A2);
+    model->insert(A3);
+    model->insert(A4);
+    model->insert(A5);
+    return model;
+  }
 }
 
 TEST_CASE("test_local_publishing_subscribing",
@@ -184,4 +200,73 @@ TEST_CASE("test_local_loading_open_interval",
     REQUIRE(std::is_permutation(data.begin(), data.end(), expected.begin(),
       expected.end()));
   }, "test_local_loading_open_interval");
+}
+
+TEST_CASE("test_specific_count_zero", "[LocalOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = count_model();
+    auto promise = model->load(Security("A", 0), from_time_t(100), 0);
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>());
+  }, "test_specific_count_zero");
+}
+
+TEST_CASE("test_specific_count_loading_next",
+    "[LocalOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = count_model();
+    auto promise = model->load(Security("A", 0), from_time_t(100), 3);
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A2, A3, A4}));
+  }, "test_specific_count_loading_next");
+}
+
+TEST_CASE("test_specific_count_loading_next_at_end",
+    "[LocalOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = count_model();
+    auto promise = model->load(Security("A", 0), from_time_t(300), 10);
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A4, A5}));
+  }, "test_specific_count_loading_next_at_end");
+}
+
+TEST_CASE("test_specific_count_loading_next_at_end_no_data",
+    "[LocalOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = count_model();
+    auto promise = model->load(Security("A", 0), from_time_t(500), 10);
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({}));
+  }, "test_specific_count_loading_next_at_end_no_data");
+}
+
+TEST_CASE("test_specific_count_loading_previous",
+    "[LocalOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = count_model();
+    auto promise = model->load(Security("A", 0), from_time_t(500), -3);
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A2, A3, A4}));
+  }, "test_specific_count_loading_previous");
+}
+
+TEST_CASE("test_specific_count_loading_previous_at_start",
+    "[LocalOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = count_model();
+    auto promise = model->load(Security("A", 0), from_time_t(300), -10);
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A1, A2}));
+  }, "test_specific_count_loading_previous_at_start");
+}
+
+TEST_CASE("test_specific_count_loading_previous_at_start_no_data",
+    "[LocalOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = count_model();
+    auto promise = model->load(Security("A", 0), from_time_t(100), -10);
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({}));
+  }, "test_specific_count_loading_previous_at_start_no_data");
 }
