@@ -3,7 +3,6 @@
 
 using namespace boost;
 using namespace boost::icl;
-using namespace boost::posix_time;
 using namespace Nexus;
 using namespace Spire;
 
@@ -40,40 +39,6 @@ QtPromise<std::vector<Nexus::OrderImbalance>>
   return QtPromise([imbalances = std::move(imbalances)] () mutable {
     return std::move(imbalances);
   });
-}
-
-QtPromise<std::vector<Nexus::OrderImbalance>>
-    LocalOrderImbalanceIndicatorModel::load(const Security& security,
-    const ptime& timestamp, int count) {
-  if(count == 0) {
-    return QtPromise<std::vector<OrderImbalance>>([] {
-        return std::vector<OrderImbalance>();
-      });
-  }
-  auto [lower_iter, upper_iter] = [&] {
-      if(count > 0) {
-        auto lower = std::upper_bound(m_imbalances.begin(), m_imbalances.end(),
-          timestamp, [] (const auto& timestamp, const auto& imbalance) {
-              return imbalance.m_timestamp > timestamp;
-            });
-        auto lower_index = std::distance(m_imbalances.begin(), lower);
-        auto upper = lower + min(std::distance(lower, m_imbalances.end()),
-           (lower_index + count) - lower_index);
-        return std::make_tuple(lower, upper);
-      }
-      auto upper = std::lower_bound(m_imbalances.begin(),
-        m_imbalances.end(), timestamp,
-        [] (const auto& imbalance, const auto& timestamp) {
-            return imbalance.m_timestamp < timestamp;
-          });
-      auto lower = m_imbalances.begin() +
-        max(0, std::distance(m_imbalances.begin(), upper) + count);
-      return std::make_tuple(lower, upper);
-    }();
-  return QtPromise<std::vector<OrderImbalance>>(
-    [imbalances = std::vector<OrderImbalance>(lower_iter, upper_iter)] {
-        return std::move(imbalances);
-      });
 }
 
 SubscriptionResult<optional<Nexus::OrderImbalance>>
