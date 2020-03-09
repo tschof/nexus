@@ -42,7 +42,10 @@ QtPromise<std::vector<OrderImbalance>>
 QtPromise<std::vector<OrderImbalance>>
     CachedOrderImbalanceIndicatorModel::load(const Security& security,
     const ptime& timestamp, const SnapshotLimit& limit) {
-  return {};
+  if(limit.GetSize() == 0) {
+    return QtPromise([] { return std::vector<OrderImbalance>(); });
+  }
+  return m_cache.load(security, timestamp, limit);
 }
 
 SubscriptionResult<optional<Nexus::OrderImbalance>>

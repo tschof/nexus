@@ -29,7 +29,7 @@ namespace {
   auto A4 = make_imbalance("A", from_time_t(400));
   auto A5 = make_imbalance("A", from_time_t(500));
 
-  auto count_model() {
+  auto limit_tests_model() {
     auto model = std::make_unique<LocalOrderImbalanceIndicatorModel>();
     model->insert(A1);
     model->insert(A2);
@@ -207,7 +207,7 @@ TEST_CASE("test_local_loading_open_interval",
 TEST_CASE("test_local_specific_count_zero",
     "[LocalOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = count_model();
+    auto model = limit_tests_model();
     auto promise = model->load(Security("A", 0), from_time_t(100),
       SnapshotLimit::FromHead(0));
     auto data = wait(std::move(promise));
@@ -218,7 +218,7 @@ TEST_CASE("test_local_specific_count_zero",
 TEST_CASE("test_local_specific_count_loading_next",
     "[LocalOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = count_model();
+    auto model = limit_tests_model();
     auto promise = model->load(Security("A", 0), from_time_t(100),
       SnapshotLimit::FromHead(3));
     auto data = wait(std::move(promise));
@@ -229,7 +229,7 @@ TEST_CASE("test_local_specific_count_loading_next",
 TEST_CASE("test_local_specific_count_loading_next_at_end",
     "[LocalOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = count_model();
+    auto model = limit_tests_model();
     auto promise = model->load(Security("A", 0), from_time_t(300),
       SnapshotLimit::FromHead(10));
     auto data = wait(std::move(promise));
@@ -240,7 +240,7 @@ TEST_CASE("test_local_specific_count_loading_next_at_end",
 TEST_CASE("test_local_specific_count_loading_next_at_end_no_data",
     "[LocalOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = count_model();
+    auto model = limit_tests_model();
     auto promise = model->load(Security("A", 0), from_time_t(500),
       SnapshotLimit::FromHead(10));
     auto data = wait(std::move(promise));
@@ -251,7 +251,7 @@ TEST_CASE("test_local_specific_count_loading_next_at_end_no_data",
 TEST_CASE("test_local_specific_count_loading_previous",
     "[LocalOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = count_model();
+    auto model = limit_tests_model();
     auto promise = model->load(Security("A", 0), from_time_t(500),
       SnapshotLimit::FromTail(3));
     auto data = wait(std::move(promise));
@@ -262,7 +262,7 @@ TEST_CASE("test_local_specific_count_loading_previous",
 TEST_CASE("test_local_specific_count_loading_previous_at_start",
     "[LocalOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = count_model();
+    auto model = limit_tests_model();
     auto promise = model->load(Security("A", 0), from_time_t(300),
       SnapshotLimit::FromTail(10));
     auto data = wait(std::move(promise));
@@ -273,7 +273,7 @@ TEST_CASE("test_local_specific_count_loading_previous_at_start",
 TEST_CASE("test_local_specific_count_loading_previous_at_start_no_data",
     "[LocalOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = count_model();
+    auto model = limit_tests_model();
     auto promise = model->load(Security("A", 0), from_time_t(0),
       SnapshotLimit::FromTail(10));
     auto data = wait(std::move(promise));

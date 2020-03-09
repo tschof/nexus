@@ -1,10 +1,12 @@
 #include <catch.hpp>
+#include "Beam/Queries/SnapshotLimit.hpp"
 #include "Spire/OrderImbalanceIndicator/CachedOrderImbalanceIndicatorModel.hpp"
 #include "Spire/OrderImbalanceIndicator/LocalOrderImbalanceIndicatorModel.hpp"
 #include "Spire/Spire/QtPromise.hpp"
 #include "Spire/SpireTester/TestOrderImbalanceIndicatorModel.hpp"
 #include "Spire/SpireTester/SpireTester.hpp"
 
+using namespace Beam::Queries;
 using namespace boost;
 using namespace boost::icl;
 using namespace boost::posix_time;
@@ -34,6 +36,22 @@ namespace {
   const auto H = make_imbalance(S, from_time_t(300));
   const auto I = make_imbalance(S, from_time_t(400));
   const auto J = make_imbalance(S, from_time_t(500));
+
+  auto A1 = make_imbalance("A", from_time_t(100));
+  auto A2 = make_imbalance("A", from_time_t(200));
+  auto A3 = make_imbalance("A", from_time_t(300));
+  auto A4 = make_imbalance("A", from_time_t(400));
+  auto A5 = make_imbalance("A", from_time_t(500));
+
+  auto limit_tests_model() {
+    auto model = std::make_shared<LocalOrderImbalanceIndicatorModel>();
+    model->insert(A1);
+    model->insert(A2);
+    model->insert(A3);
+    model->insert(A4);
+    model->insert(A5);
+    return model;
+  }
 }
 
 TEST_CASE("test_cached_publishing_subscribing",
@@ -520,4 +538,125 @@ TEST_CASE("test_cached_single_security_imbalance_mixed_subsets_and_supersets",
       from_time_t(500)));
     request3->set_result({});
   }, "test_cached_single_security_imbalance_mixed_subsets_and_supersets");
+}
+
+TEST_CASE("test_cached_specific_count_zero",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = CachedOrderImbalanceIndicatorModel(limit_tests_model());
+    auto promise = model.load(Security("A", 0), from_time_t(100),
+      SnapshotLimit::FromHead(0));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>());
+  }, "test_cached_specific_count_zero");
+}
+
+TEST_CASE("test_cached_specific_count_loading_next",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = CachedOrderImbalanceIndicatorModel(limit_tests_model());
+    auto promise = model.load(Security("A", 0), from_time_t(100),
+      SnapshotLimit::FromHead(3));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A2, A3, A4}));
+  }, "test_cached_specific_count_loading_next");
+}
+
+TEST_CASE("test_cached_specific_count_loading_next_cached",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+
+  }, "test_cached_specific_count_loading_next_cached");
+}
+
+TEST_CASE("test_cached_specific_count_loading_next_at_end",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = CachedOrderImbalanceIndicatorModel(limit_tests_model());
+    auto promise = model.load(Security("A", 0), from_time_t(300),
+      SnapshotLimit::FromHead(10));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A4, A5}));
+  }, "test_cached_specific_count_loading_next_at_end");
+}
+
+TEST_CASE("test_cached_specific_count_loading_next_at_end_cached",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+
+  }, "test_cached_specific_count_loading_next_at_end_cached");
+}
+
+TEST_CASE("test_cached_specific_count_loading_next_at_end_no_data",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = CachedOrderImbalanceIndicatorModel(limit_tests_model());
+    auto promise = model.load(Security("A", 0), from_time_t(500),
+      SnapshotLimit::FromHead(10));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({}));
+  }, "test_cached_specific_count_loading_next_at_end_no_data");
+}
+
+TEST_CASE("test_cached_specific_count_loading_next_at_end_no_data_cached",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+
+  }, "test_cached_specific_count_loading_next_at_end_no_data_cached");
+}
+
+TEST_CASE("test_cached_specific_count_loading_previous",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = CachedOrderImbalanceIndicatorModel(limit_tests_model());
+    auto promise = model.load(Security("A", 0), from_time_t(500),
+      SnapshotLimit::FromTail(3));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A2, A3, A4}));
+  }, "test_cached_specific_count_loading_previous");
+}
+
+TEST_CASE("test_cached_specific_count_loading_previous_cached",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+
+  }, "test_cached_specific_count_loading_previous_cached");
+}
+
+TEST_CASE("test_cached_specific_count_loading_previous_at_start",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = CachedOrderImbalanceIndicatorModel(limit_tests_model());
+    auto promise = model.load(Security("A", 0), from_time_t(300),
+      SnapshotLimit::FromTail(10));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A1, A2}));
+  }, "test_cached_specific_count_loading_previous_at_start");
+}
+
+TEST_CASE("test_cached_specific_count_loading_previous_at_start_cached",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+
+  }, "test_cached_specific_count_loading_previous_at_start_cached");
+}
+
+TEST_CASE(
+    "test_cached_specific_count_loading_previous_at_start_no_data",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = CachedOrderImbalanceIndicatorModel(limit_tests_model());
+    auto promise = model.load(Security("A", 0), from_time_t(0),
+      SnapshotLimit::FromTail(10));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({}));
+  }, "test_cached_specific_count_loading_previous_at_start_no_data");
+}
+
+TEST_CASE(
+    "test_cached_specific_count_loading_previous_at_start_no_data_cached",
+    "[CachedOrderImbalanceIndicatorModel]") {
+  run_test([] {
+
+  }, "test_cached_specific_count_loading_previous_at_start_no_data_cached");
 }

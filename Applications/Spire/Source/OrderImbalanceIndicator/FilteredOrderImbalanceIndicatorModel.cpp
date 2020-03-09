@@ -1,8 +1,8 @@
 #include "Spire/OrderImbalanceIndicator/FilteredOrderImbalanceIndicatorModel.hpp"
 
-using Filter = Spire::FilteredOrderImbalanceIndicatorModel::Filter;
 using namespace Beam::Queries;
 using namespace boost::posix_time;
+using Filter = Spire::FilteredOrderImbalanceIndicatorModel::Filter;
 using namespace Nexus;
 using namespace Spire;
 

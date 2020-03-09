@@ -66,7 +66,7 @@ namespace {
   const auto A5 = make_imbalance("A", market_db.FromDisplayName("NYSE").m_code,
     Side::ASK, 1, Money::ONE, from_time_t(500));
 
-  auto count_model() {
+  auto limit_tests_model() {
     auto model = std::make_shared<LocalOrderImbalanceIndicatorModel>();
     model->insert(A1);
     model->insert(A2);
@@ -422,7 +422,7 @@ TEST_CASE("test_filtered_single_security_loading",
 TEST_CASE("test_filtered_specific_count_zero",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(), {});
     auto promise = model.load(Security("A", 0), from_time_t(100),
       SnapshotLimit::FromHead(0));
     auto data = wait(std::move(promise));
@@ -433,7 +433,7 @@ TEST_CASE("test_filtered_specific_count_zero",
 TEST_CASE("test_filtered_specific_count_loading_next",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(), {});
     auto promise = model.load(Security("A", 0), from_time_t(100),
       SnapshotLimit::FromHead(3));
     auto data = wait(std::move(promise));
@@ -444,7 +444,7 @@ TEST_CASE("test_filtered_specific_count_loading_next",
 TEST_CASE("test_filtered_specific_count_loading_next_at_end",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(), {});
     auto promise = model.load(Security("A", 0), from_time_t(300),
       SnapshotLimit::FromHead(10));
     auto data = wait(std::move(promise));
@@ -455,7 +455,7 @@ TEST_CASE("test_filtered_specific_count_loading_next_at_end",
 TEST_CASE("test_filtered_specific_count_loading_next_at_end_no_data",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(), {});
     auto promise = model.load(Security("A", 0), from_time_t(500),
       SnapshotLimit::FromHead(10));
     auto data = wait(std::move(promise));
@@ -466,7 +466,7 @@ TEST_CASE("test_filtered_specific_count_loading_next_at_end_no_data",
 TEST_CASE("test_filtered_specific_count_loading_previous",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(), {});
     auto promise = model.load(Security("A", 0), from_time_t(500),
       SnapshotLimit::FromTail(3));
     auto data = wait(std::move(promise));
@@ -477,7 +477,7 @@ TEST_CASE("test_filtered_specific_count_loading_previous",
 TEST_CASE("test_filtered_specific_count_loading_previous_at_start",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(), {});
     auto promise = model.load(Security("A", 0), from_time_t(300),
       SnapshotLimit::FromTail(10));
     auto data = wait(std::move(promise));
@@ -488,7 +488,7 @@ TEST_CASE("test_filtered_specific_count_loading_previous_at_start",
 TEST_CASE("test_filtered_specific_count_loading_previous_at_start_no_data",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(), {});
     auto promise = model.load(Security("A", 0), from_time_t(0),
       SnapshotLimit::FromTail(10));
     auto data = wait(std::move(promise));
@@ -500,7 +500,7 @@ TEST_CASE(
     "test_filtered_specific_count_loading_previous_at_start_filters_applied",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
-    auto model = FilteredOrderImbalanceIndicatorModel(count_model(),
+    auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(),
       {make_side_filter(Nexus::Side::ASK)});
     auto promise = model.load(Security("A", 0), from_time_t(0),
       SnapshotLimit::FromHead(10));
