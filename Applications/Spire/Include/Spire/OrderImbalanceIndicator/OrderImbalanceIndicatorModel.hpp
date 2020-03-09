@@ -3,6 +3,7 @@
 #include <vector>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
+#include "Beam/Queries/SnapshotLimit.hpp"
 #include "Nexus/Definitions/OrderImbalance.hpp"
 #include "Spire/OrderImbalanceIndicator/OrderImbalanceIndicator.hpp"
 #include "Spire/Spire/Intervals.hpp"
@@ -40,6 +41,11 @@ namespace Spire {
       */
       virtual QtPromise<std::vector<Nexus::OrderImbalance>> load(
         const Nexus::Security& security, const TimeInterval& interval) = 0;
+
+      virtual QtPromise<std::vector<Nexus::OrderImbalance>> load(
+        const Nexus::Security& security,
+        const boost::posix_time::ptime& timestamp,
+        const Beam::Queries::SnapshotLimit& limit) = 0;
 
       //! Subscribes to real time order imbalances.
       /*!

@@ -1,5 +1,6 @@
 #include "Spire/OrderImbalanceIndicator/CachedOrderImbalanceIndicatorModel.hpp"
 
+using namespace Beam::Queries;
 using namespace boost;
 using namespace boost::icl;
 using namespace boost::posix_time;
@@ -36,6 +37,12 @@ QtPromise<std::vector<OrderImbalance>>
   return load_from_model(security, interval).then([=] (auto i) {
     return m_cache.load(security, interval);
   });
+}
+
+QtPromise<std::vector<OrderImbalance>>
+    CachedOrderImbalanceIndicatorModel::load(const Security& security,
+    const ptime& timestamp, const SnapshotLimit& limit) {
+  return {};
 }
 
 SubscriptionResult<optional<Nexus::OrderImbalance>>

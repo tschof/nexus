@@ -1,6 +1,8 @@
 #include "Spire/OrderImbalanceIndicator/FilteredOrderImbalanceIndicatorModel.hpp"
 
 using Filter = Spire::FilteredOrderImbalanceIndicatorModel::Filter;
+using namespace Beam::Queries;
+using namespace boost::posix_time;
 using namespace Nexus;
 using namespace Spire;
 
@@ -29,6 +31,12 @@ QtPromise<std::vector<Nexus::OrderImbalance>>
         {make_security_list_filter({security})}, filtered_imbalances);
       return filtered_imbalances;
     });
+}
+
+QtPromise<std::vector<Nexus::OrderImbalance>>
+    FilteredOrderImbalanceIndicatorModel::load(const Security& security,
+    const ptime& timestamp, const SnapshotLimit& limit) {
+  return {};
 }
 
 SubscriptionResult<boost::optional<Nexus::OrderImbalance>>
