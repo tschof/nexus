@@ -1,4 +1,5 @@
 #include <catch.hpp>
+#include "Beam/Queries/SnapshotLimit.hpp"
 #include "Nexus/Definitions/DefaultCountryDatabase.hpp"
 #include "Spire/OrderImbalanceIndicator/FilteredOrderImbalanceIndicatorModel.hpp"
 #include "Spire/OrderImbalanceIndicator/LocalOrderImbalanceIndicatorModel.hpp"
@@ -6,6 +7,7 @@
 #include "Spire/SpireTester/SpireTester.hpp"
 #include "Spire/SpireTester/TestOrderImbalanceIndicatorModel.hpp"
 
+using namespace Beam::Queries;
 using namespace boost::posix_time;
 using Filter = Spire::FilteredOrderImbalanceIndicatorModel::Filter;
 using namespace Nexus;
@@ -54,6 +56,23 @@ namespace {
     model->insert(C);
     model->insert(D);
     model->insert(E);
+    return model;
+  }
+
+  const auto A1 = make_imbalance("A", from_time_t(100));
+  const auto A2 = make_imbalance("A", from_time_t(200));
+  const auto A3 = make_imbalance("A", from_time_t(300));
+  const auto A4 = make_imbalance("A", from_time_t(400));
+  const auto A5 = make_imbalance("A", market_db.FromDisplayName("NYSE").m_code,
+    Side::ASK, 1, Money::ONE, from_time_t(500));
+
+  auto count_model() {
+    auto model = std::make_shared<LocalOrderImbalanceIndicatorModel>();
+    model->insert(A1);
+    model->insert(A2);
+    model->insert(A3);
+    model->insert(A4);
+    model->insert(A5);
     return model;
   }
 }
@@ -398,4 +417,94 @@ TEST_CASE("test_filtered_single_security_loading",
     auto data = wait(std::move(promise));
     REQUIRE(data == std::vector<OrderImbalance>({G}));
   }, "test_filtered_single_security_loading");
+}
+
+TEST_CASE("test_filtered_specific_count_zero",
+    "[FilteredOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto promise = model.load(Security("A", 0), from_time_t(100),
+      SnapshotLimit::FromHead(0));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>());
+  }, "test_filtered_specific_count_zero");
+}
+
+TEST_CASE("test_filtered_specific_count_loading_next",
+    "[FilteredOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto promise = model.load(Security("A", 0), from_time_t(100),
+      SnapshotLimit::FromHead(3));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A2, A3, A4}));
+  }, "test_filtered_specific_count_loading_next");
+}
+
+TEST_CASE("test_filtered_specific_count_loading_next_at_end",
+    "[FilteredOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto promise = model.load(Security("A", 0), from_time_t(300),
+      SnapshotLimit::FromHead(10));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A4, A5}));
+  }, "test_filtered_specific_count_loading_next_at_end");
+}
+
+TEST_CASE("test_filtered_specific_count_loading_next_at_end_no_data",
+    "[FilteredOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto promise = model.load(Security("A", 0), from_time_t(500),
+      SnapshotLimit::FromHead(10));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({}));
+  }, "test_filtered_specific_count_loading_next_at_end_no_data");
+}
+
+TEST_CASE("test_filtered_specific_count_loading_previous",
+    "[FilteredOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto promise = model.load(Security("A", 0), from_time_t(500),
+      SnapshotLimit::FromTail(3));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A2, A3, A4}));
+  }, "test_filtered_specific_count_loading_previous");
+}
+
+TEST_CASE("test_filtered_specific_count_loading_previous_at_start",
+    "[FilteredOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto promise = model.load(Security("A", 0), from_time_t(300),
+      SnapshotLimit::FromTail(10));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A1, A2}));
+  }, "test_filtered_specific_count_loading_previous_at_start");
+}
+
+TEST_CASE("test_filtered_specific_count_loading_previous_at_start_no_data",
+    "[FilteredOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = FilteredOrderImbalanceIndicatorModel(count_model(), {});
+    auto promise = model.load(Security("A", 0), from_time_t(0),
+      SnapshotLimit::FromTail(10));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({}));
+  }, "test_filtered_specific_count_loading_previous_at_start_no_data");
+}
+
+TEST_CASE(
+    "test_filtered_specific_count_loading_previous_at_start_filters_applied",
+    "[FilteredOrderImbalanceIndicatorModel]") {
+  run_test([] {
+    auto model = FilteredOrderImbalanceIndicatorModel(count_model(),
+      {make_side_filter(Nexus::Side::ASK)});
+    auto promise = model.load(Security("A", 0), from_time_t(0),
+      SnapshotLimit::FromHead(10));
+    auto data = wait(std::move(promise));
+    REQUIRE(data == std::vector<OrderImbalance>({A5}));
+  }, "test_filtered_specific_count_loading_previous_at_start_filters_applied");
 }

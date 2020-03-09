@@ -36,7 +36,13 @@ QtPromise<std::vector<Nexus::OrderImbalance>>
 QtPromise<std::vector<Nexus::OrderImbalance>>
     FilteredOrderImbalanceIndicatorModel::load(const Security& security,
     const ptime& timestamp, const SnapshotLimit& limit) {
-  return {};
+  return m_source_model->load(security, timestamp, limit).then(
+    [=, filters = m_filters] (const auto& imbalances) {
+      auto filtered_imbalances = filter_imbalances(*filters, imbalances.Get());
+      filtered_imbalances = filter_imbalances(
+        {make_security_list_filter({security})}, filtered_imbalances);
+      return filtered_imbalances;
+    });
 }
 
 SubscriptionResult<boost::optional<Nexus::OrderImbalance>>
