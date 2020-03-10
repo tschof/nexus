@@ -45,13 +45,45 @@ QtPromise<std::vector<OrderImbalance>>
   if(limit.GetSize() == 0) {
     return QtPromise([] { return std::vector<OrderImbalance>(); });
   }
-  return m_cache.load(security, timestamp, limit);
+  return load_with_limit({security, timestamp, limit, limit});
 }
 
 SubscriptionResult<optional<Nexus::OrderImbalance>>
     CachedOrderImbalanceIndicatorModel::subscribe(
     const OrderImbalanceSignal::slot_type& slot) {
   return m_source_model->subscribe(slot);
+}
+
+QtPromise<std::vector<OrderImbalance>>
+    CachedOrderImbalanceIndicatorModel::load_from_cache(const LoadInfo& info) {
+  return m_cache.load(info.m_security, info.m_timestamp,
+    info.m_current_limit).then([=] (auto result) {
+        auto imbalances = result.Get();
+        if(imbalances.size() == info.m_requested_limit.GetSize()) {
+          return QtPromise<std::vector<OrderImbalance>>(
+            [imbalances = std::move(imbalances)] {
+                return std::move(imbalances);
+              });
+        }
+        // TODO: update load info
+        // potentially have to break up load_with_limit into two functions
+        return load_with_limit(info);
+      });
+}
+
+// TODO: reorder declaration in alphabetical order
+QtPromise<std::vector<OrderImbalance>>
+    CachedOrderImbalanceIndicatorModel::load_with_limit(const LoadInfo& info) {
+  if(boost::icl::contains(m_intervals, {info.m_timestamp, info.m_timestamp})) {
+    return m_source_model->load(info.m_security, info.m_timestamp,
+      info.m_requested_limit).then([=] (auto result) {
+          // TODO: construct proper interval
+          on_imbalances_loaded(info.m_security, {}, result.Get());
+          // TODO: update load info
+          return load_from_cache(info);
+        });
+  }
+  return load_from_cache(info);
 }
 
 QtPromise<void> CachedOrderImbalanceIndicatorModel::load_from_model(
