@@ -17,6 +17,13 @@ TestOrderImbalanceIndicatorModel::LoadEntry::LoadEntry(
     m_security(security),
     m_is_loaded(false) {}
 
+TestOrderImbalanceIndicatorModel::LoadEntry::LoadEntry(
+  const Security security, const ptime& timestamp, const SnapshotLimit& limit)
+  : m_security(security),
+    m_timestamp(timestamp),
+    m_limit(limit),
+    m_is_loaded(false) {}
+
 const TimeInterval&
     TestOrderImbalanceIndicatorModel::LoadEntry::get_interval() const {
   return m_interval;
@@ -25,6 +32,16 @@ const TimeInterval&
 const std::optional<Security>&
     TestOrderImbalanceIndicatorModel::LoadEntry::get_security() const {
   return m_security;
+}
+
+const ptime&
+    TestOrderImbalanceIndicatorModel::LoadEntry::get_timestamp() const {
+  return m_timestamp;
+}
+
+const SnapshotLimit&
+    TestOrderImbalanceIndicatorModel::LoadEntry::get_limit() const {
+  return m_limit;
 }
 
 void TestOrderImbalanceIndicatorModel::LoadEntry::set_result(
@@ -55,7 +72,8 @@ QtPromise<std::vector<Nexus::OrderImbalance>>
 QtPromise<std::vector<Nexus::OrderImbalance>>
     TestOrderImbalanceIndicatorModel::load(const Security& security,
     const ptime& timestamp, const SnapshotLimit& limit) {
-  return {};
+  return add_load_entry(std::make_shared<LoadEntry>(security, timestamp,
+    limit));
 }
 
 SubscriptionResult<boost::optional<Nexus::OrderImbalance>>

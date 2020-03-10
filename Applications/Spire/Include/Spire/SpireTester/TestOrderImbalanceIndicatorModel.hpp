@@ -30,12 +30,33 @@ namespace Spire {
           LoadEntry(const Nexus::Security security,
             const TimeInterval& interval);
 
+          //! Constructs a LoadEntry for loading a specific number of order
+          //! imbalances.
+          /*
+            \param security The security whose order imbalances will be loaded.
+            \param timestamp The timestamp to begin loading from.
+            \param limit Defines the number of order imbalances to load and
+                         whether to load past or future order imbalances
+                         relative to the timestamp.
+          */
+          LoadEntry(const Nexus::Security security,
+            const boost::posix_time::ptime& timestamp,
+            const Beam::Queries::SnapshotLimit& limit);
+
           //! Returns the load entry's requested time interval.
           const TimeInterval& get_interval() const;
 
           //! Returns the security, if the original request was for a single
           //! security.
           const std::optional<Nexus::Security>& get_security() const;
+
+          //! Returns the timestamp, if the original request was for a specific
+          //! number of order imbalances.
+          const boost::posix_time::ptime& get_timestamp() const;
+
+          //! Returns the limit, if the original request was for a specific
+          //! number of order imbalances.
+          const Beam::Queries::SnapshotLimit& get_limit() const;
 
           //! Sets the result of the load operation.
           /*
@@ -52,6 +73,8 @@ namespace Spire {
           mutable Beam::Threading::Mutex m_mutex;
           TimeInterval m_interval;
           std::optional<Nexus::Security> m_security;
+          boost::posix_time::ptime m_timestamp;
+          Beam::Queries::SnapshotLimit m_limit;
           bool m_is_loaded;
           std::vector<Nexus::OrderImbalance> m_result;
           Beam::Threading::ConditionVariable m_load_condition;
