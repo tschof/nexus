@@ -77,29 +77,6 @@ QtPromise<std::vector<OrderImbalance>>
       });
 }
 
-// TODO: reorder declaration in alphabetical order
-QtPromise<std::vector<OrderImbalance>>
-    CachedOrderImbalanceIndicatorModel::load_with_limit(const LoadInfo& info) {
-  return m_source_model->load(info.m_security, info.m_timestamp,
-    info.m_requested_limit).then([=] (auto result) {
-        auto imbalances = std::move(result.Get());
-        auto loaded_interval = [&] {
-            if(info.m_current_limit.GetType() == SnapshotLimit::Type::HEAD) {
-              return TimeInterval(info.m_timestamp,
-                imbalances.back().m_timestamp);
-            }
-            return TimeInterval(imbalances.front().m_timestamp,
-              info.m_timestamp);
-          }();
-        auto updated_info = info;
-        updated_info.m_current_limit = {updated_info.m_current_limit.GetType(),
-          updated_info.m_current_limit.GetSize() - imbalances.size()};
-        on_imbalances_loaded(info.m_security, {loaded_interval},
-          std::move(imbalances));
-        return load_from_cache(info);
-      });
-}
-
 QtPromise<void> CachedOrderImbalanceIndicatorModel::load_from_model(
     const TimeInterval& interval) {
   auto unloaded_intervals = interval_set<ptime>(interval) - m_intervals;
@@ -134,6 +111,28 @@ QtPromise<void> CachedOrderImbalanceIndicatorModel::load_from_model(
     promises.push_back(std::move(promise));
   }
   return all(std::move(promises));
+}
+
+QtPromise<std::vector<OrderImbalance>>
+    CachedOrderImbalanceIndicatorModel::load_with_limit(const LoadInfo& info) {
+  return m_source_model->load(info.m_security, info.m_timestamp,
+    info.m_requested_limit).then([=] (auto result) {
+        auto imbalances = std::move(result.Get());
+        auto loaded_interval = [&] {
+            if(info.m_current_limit.GetType() == SnapshotLimit::Type::HEAD) {
+              return TimeInterval(info.m_timestamp,
+                imbalances.back().m_timestamp);
+            }
+            return TimeInterval(imbalances.front().m_timestamp,
+              info.m_timestamp);
+          }();
+        auto updated_info = info;
+        updated_info.m_current_limit = {updated_info.m_current_limit.GetType(),
+          updated_info.m_current_limit.GetSize() - imbalances.size()};
+        on_imbalances_loaded(info.m_security, {loaded_interval},
+          std::move(imbalances));
+        return load_from_cache(info);
+      });
 }
 
 void CachedOrderImbalanceIndicatorModel::on_imbalance_published(
