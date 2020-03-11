@@ -5,8 +5,15 @@ using namespace Nexus;
 using namespace Spire;
 
 HistoricalOrderImbalanceChartModel::HistoricalOrderImbalanceChartModel(
+  const Security& security,
   std::shared_ptr<OrderImbalanceIndicatorModel> model)
-  : m_model(std::move(model)) {}
+  : m_security(security),
+    m_model(std::move(model)) {}
+
+QtPromise<std::vector<OrderImbalance>>
+    HistoricalOrderImbalanceChartModel::load(const TimeInterval& interval) {
+  return m_model->load(m_security, interval);
+}
 
 QtPromise<std::vector<OrderImbalance>>
     HistoricalOrderImbalanceChartModel::resize(const TimeInterval& interval,
