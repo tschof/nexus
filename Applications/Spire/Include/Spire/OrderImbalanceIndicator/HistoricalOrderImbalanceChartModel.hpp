@@ -50,7 +50,7 @@ namespace Spire {
         const TimeInterval& interval, int value);
 
       //! If the last loaded interval includes the last published imbalance,
-      //! signals that a new order imbalance was published.
+      //! signals when an order imbalance is published.
       boost::signals2::connection connect_published_signal(
         const PublishedSignal::slot_type& slot) const;
 
