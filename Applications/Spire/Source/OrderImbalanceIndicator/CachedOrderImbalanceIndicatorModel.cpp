@@ -72,7 +72,7 @@ QtPromise<std::vector<OrderImbalance>>
         }
         auto updated_info = info;
         updated_info.m_current_limit = {info.m_current_limit.GetType(),
-          imbalances.size()};
+          static_cast<int>(imbalances.size())};
         return load_with_limit(updated_info);
       });
 }
@@ -128,7 +128,8 @@ QtPromise<std::vector<OrderImbalance>>
           }();
         auto updated_info = info;
         updated_info.m_current_limit = {updated_info.m_current_limit.GetType(),
-          updated_info.m_current_limit.GetSize() - imbalances.size()};
+          static_cast<int>(updated_info.m_current_limit.GetSize() -
+          imbalances.size())};
         on_imbalances_loaded(info.m_security, {loaded_interval},
           std::move(imbalances));
         return load_from_cache(info);

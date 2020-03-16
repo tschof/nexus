@@ -53,19 +53,19 @@ QtPromise<std::vector<Nexus::OrderImbalance>>
   }
   auto [lower_iter, upper_iter] = [&] {
       if(limit.GetType() == SnapshotLimit::Type::HEAD) {
-        auto lower = std::upper_bound(m_imbalances.begin(), m_imbalances.end(),
-          timestamp, [] (const auto& timestamp, const auto& imbalance) {
-              return imbalance.m_timestamp > timestamp;
+        auto lower = std::lower_bound(m_imbalances.begin(),
+          m_imbalances.end(), timestamp,
+          [] (const auto& imbalance, const auto& timestamp) {
+              return imbalance.m_timestamp < timestamp;
             });
         auto lower_index = std::distance(m_imbalances.begin(), lower);
         auto upper = lower + min(std::distance(lower, m_imbalances.end()),
            (lower_index + limit.GetSize()) - lower_index);
         return std::make_tuple(lower, upper);
       }
-      auto upper = std::lower_bound(m_imbalances.begin(),
-        m_imbalances.end(), timestamp,
-        [] (const auto& imbalance, const auto& timestamp) {
-            return imbalance.m_timestamp < timestamp;
+      auto upper = std::upper_bound(m_imbalances.begin(), m_imbalances.end(),
+        timestamp, [] (const auto& timestamp, const auto& imbalance) {
+            return imbalance.m_timestamp > timestamp;
           });
       auto lower = m_imbalances.begin() +
         max(0, std::distance(m_imbalances.begin(), upper) - limit.GetSize());

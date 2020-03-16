@@ -589,8 +589,8 @@ TEST_CASE("test_cached_specific_count_loading_next_cached",
     auto promise2 = cached_model.load(S, from_time_t(200),
       SnapshotLimit::FromHead(3));
     auto request = wait(test_model->pop_load());
-    REQUIRE(request->get_timestamp() == from_time_t(300) &&
-      request->get_limit == SnapshotLimit::FromHead(2));
+    REQUIRE(request->get_timestamp() == from_time_t(300));
+    REQUIRE(request->get_limit() == SnapshotLimit::FromHead(2));
     request->set_result({});
   }, "test_cached_specific_count_loading_next_cached");
 }
@@ -618,8 +618,8 @@ TEST_CASE("test_cached_specific_count_loading_next_at_end_cached",
     auto promise2 = cached_model.load(S, from_time_t(300),
       SnapshotLimit::FromHead(10));
     auto request = wait(test_model->pop_load());
-    REQUIRE(request->get_timestamp() == from_time_t(400) &&
-      request->get_limit == SnapshotLimit::FromHead(9));
+    REQUIRE(request->get_timestamp() == from_time_t(400));
+    REQUIRE(request->get_limit() == SnapshotLimit::FromHead(9));
     request->set_result({});
   }, "test_cached_specific_count_loading_next_at_end_cached");
 }
@@ -647,8 +647,8 @@ TEST_CASE("test_cached_specific_count_loading_next_at_end_no_data_cached",
     auto promise2 = cached_model.load(S, from_time_t(500),
       SnapshotLimit::FromHead(10));
     auto request = wait(test_model->pop_load());
-    REQUIRE(request->get_timestamp() == from_time_t(500) &&
-      request->get_limit == SnapshotLimit::FromHead(10));
+    REQUIRE(request->get_timestamp() == from_time_t(500));
+    REQUIRE(request->get_limit() == SnapshotLimit::FromHead(10));
     request->set_result({});
   }, "test_cached_specific_count_loading_next_at_end_no_data_cached");
 }
@@ -692,8 +692,8 @@ TEST_CASE("test_cached_specific_count_loading_previous_cached",
     auto promise2 = cached_model.load(S, from_time_t(400),
       SnapshotLimit::FromTail(3));
     auto request = wait(test_model->pop_load());
-    REQUIRE(request->get_timestamp() == from_time_t(300) &&
-      request->get_limit == SnapshotLimit::FromTail(2));
+    REQUIRE(request->get_timestamp() == from_time_t(300));
+    REQUIRE(request->get_limit() == SnapshotLimit::FromTail(2));
     request->set_result({});
   }, "test_cached_specific_count_loading_previous_cached");
 }
@@ -721,8 +721,8 @@ TEST_CASE("test_cached_specific_count_loading_previous_at_start_cached",
     auto promise2 = cached_model.load(S, from_time_t(300),
       SnapshotLimit::FromTail(10));
     auto request = wait(test_model->pop_load());
-    REQUIRE(request->get_timestamp() == from_time_t(200) &&
-      request->get_limit == SnapshotLimit::FromTail(9));
+    REQUIRE(request->get_timestamp() == from_time_t(200));
+    REQUIRE(request->get_limit() == SnapshotLimit::FromTail(9));
     request->set_result({});
   }, "test_cached_specific_count_loading_previous_at_start_cached");
 }
@@ -752,8 +752,8 @@ TEST_CASE(
     auto promise2 = cached_model.load(S, from_time_t(100),
       SnapshotLimit::FromTail(10));
     auto request = wait(test_model->pop_load());
-    REQUIRE(request->get_timestamp() == from_time_t(100) &&
-      request->get_limit == SnapshotLimit::FromHead(10));
+    REQUIRE(request->get_timestamp() == from_time_t(100));
+    REQUIRE(request->get_limit() == SnapshotLimit::FromHead(10));
     request->set_result({});
   }, "test_cached_specific_count_loading_previous_at_start_no_data_cached");
 }
