@@ -434,7 +434,7 @@ TEST_CASE("test_filtered_specific_count_loading_next",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
     auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(), {});
-    auto promise = model.load(Security("A", 0), from_time_t(100),
+    auto promise = model.load(Security("A", 0), from_time_t(200),
       SnapshotLimit::FromHead(3));
     auto data = wait(std::move(promise));
     REQUIRE(data == std::vector<OrderImbalance>({A2, A3, A4}));
@@ -448,7 +448,7 @@ TEST_CASE("test_filtered_specific_count_loading_next_at_end",
     auto promise = model.load(Security("A", 0), from_time_t(300),
       SnapshotLimit::FromHead(10));
     auto data = wait(std::move(promise));
-    REQUIRE(data == std::vector<OrderImbalance>({A4, A5}));
+    REQUIRE(data == std::vector<OrderImbalance>({A3, A4, A5}));
   }, "test_filtered_specific_count_loading_next_at_end");
 }
 
@@ -456,7 +456,7 @@ TEST_CASE("test_filtered_specific_count_loading_next_at_end_no_data",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
     auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(), {});
-    auto promise = model.load(Security("A", 0), from_time_t(500),
+    auto promise = model.load(Security("A", 0), from_time_t(600),
       SnapshotLimit::FromHead(10));
     auto data = wait(std::move(promise));
     REQUIRE(data == std::vector<OrderImbalance>({}));
@@ -467,7 +467,7 @@ TEST_CASE("test_filtered_specific_count_loading_previous",
     "[FilteredOrderImbalanceIndicatorModel]") {
   run_test([] {
     auto model = FilteredOrderImbalanceIndicatorModel(limit_tests_model(), {});
-    auto promise = model.load(Security("A", 0), from_time_t(500),
+    auto promise = model.load(Security("A", 0), from_time_t(400),
       SnapshotLimit::FromTail(3));
     auto data = wait(std::move(promise));
     REQUIRE(data == std::vector<OrderImbalance>({A2, A3, A4}));
@@ -481,7 +481,7 @@ TEST_CASE("test_filtered_specific_count_loading_previous_at_start",
     auto promise = model.load(Security("A", 0), from_time_t(300),
       SnapshotLimit::FromTail(10));
     auto data = wait(std::move(promise));
-    REQUIRE(data == std::vector<OrderImbalance>({A1, A2}));
+    REQUIRE(data == std::vector<OrderImbalance>({A1, A2, A3}));
   }, "test_filtered_specific_count_loading_previous_at_start");
 }
 
