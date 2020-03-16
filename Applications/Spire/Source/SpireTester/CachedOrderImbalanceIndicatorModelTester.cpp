@@ -556,7 +556,7 @@ TEST_CASE("test_cached_specific_count_loading_next_completely_cached",
   run_test([] {
     auto test_model = std::make_shared<TestOrderImbalanceIndicatorModel>();
     auto cached_model = CachedOrderImbalanceIndicatorModel(test_model);
-    auto promise1 = cached_model.load(S, from_time_t(0),
+    auto promise1 = cached_model.load(S, from_time_t(100),
       SnapshotLimit::FromHead(5));
     wait(test_model->pop_load())->set_result({A, B, C, D, E});
     wait(std::move(promise1));
@@ -573,7 +573,7 @@ TEST_CASE("test_cached_specific_count_loading_next",
     auto model = CachedOrderImbalanceIndicatorModel(limit_tests_model());
     auto promise = model.load(S, from_time_t(100), SnapshotLimit::FromHead(3));
     auto data = wait(std::move(promise));
-    REQUIRE(data == std::vector<OrderImbalance>({A2, A3, A4}));
+    REQUIRE(data == std::vector<OrderImbalance>({A1, A2, A3}));
   }, "test_cached_specific_count_loading_next");
 }
 
@@ -582,7 +582,7 @@ TEST_CASE("test_cached_specific_count_loading_next_cached",
   run_test([] {
     auto test_model = std::make_shared<TestOrderImbalanceIndicatorModel>();
     auto cached_model = CachedOrderImbalanceIndicatorModel(test_model);
-    auto promise1 = cached_model.load(S, from_time_t(0),
+    auto promise1 = cached_model.load(S, from_time_t(100),
       SnapshotLimit::FromHead(3));
     wait(test_model->pop_load())->set_result({A, B, C});
     wait(std::move(promise1));
@@ -602,7 +602,7 @@ TEST_CASE("test_cached_specific_count_loading_next_at_end",
     auto promise = model.load(S, from_time_t(300),
       SnapshotLimit::FromHead(10));
     auto data = wait(std::move(promise));
-    REQUIRE(data == std::vector<OrderImbalance>({A4, A5}));
+    REQUIRE(data == std::vector<OrderImbalance>({A3, A4, A5}));
   }, "test_cached_specific_count_loading_next_at_end");
 }
 
@@ -611,7 +611,7 @@ TEST_CASE("test_cached_specific_count_loading_next_at_end_cached",
   run_test([] {
     auto test_model = std::make_shared<TestOrderImbalanceIndicatorModel>();
     auto cached_model = CachedOrderImbalanceIndicatorModel(test_model);
-    auto promise1 = cached_model.load(S, from_time_t(0),
+    auto promise1 = cached_model.load(S, from_time_t(100),
       SnapshotLimit::FromHead(4));
     wait(test_model->pop_load())->set_result({A, B, C, D});
     wait(std::move(promise1));
@@ -619,7 +619,7 @@ TEST_CASE("test_cached_specific_count_loading_next_at_end_cached",
       SnapshotLimit::FromHead(10));
     auto request = wait(test_model->pop_load());
     REQUIRE(request->get_timestamp() == from_time_t(400));
-    REQUIRE(request->get_limit() == SnapshotLimit::FromHead(9));
+    REQUIRE(request->get_limit() == SnapshotLimit::FromHead(8));
     request->set_result({});
   }, "test_cached_specific_count_loading_next_at_end_cached");
 }
@@ -628,29 +628,11 @@ TEST_CASE("test_cached_specific_count_loading_next_at_end_no_data",
     "[CachedOrderImbalanceIndicatorModel]") {
   run_test([] {
     auto model = CachedOrderImbalanceIndicatorModel(limit_tests_model());
-    auto promise = model.load(S, from_time_t(500),
+    auto promise = model.load(S, from_time_t(600),
       SnapshotLimit::FromHead(10));
     auto data = wait(std::move(promise));
     REQUIRE(data == std::vector<OrderImbalance>({}));
   }, "test_cached_specific_count_loading_next_at_end_no_data");
-}
-
-TEST_CASE("test_cached_specific_count_loading_next_at_end_no_data_cached",
-    "[CachedOrderImbalanceIndicatorModel]") {
-  run_test([] {
-    auto test_model = std::make_shared<TestOrderImbalanceIndicatorModel>();
-    auto cached_model = CachedOrderImbalanceIndicatorModel(test_model);
-    auto promise1 = cached_model.load(S, from_time_t(0),
-      SnapshotLimit::FromHead(5));
-    wait(test_model->pop_load())->set_result({A, B, C, D, E});
-    wait(std::move(promise1));
-    auto promise2 = cached_model.load(S, from_time_t(500),
-      SnapshotLimit::FromHead(10));
-    auto request = wait(test_model->pop_load());
-    REQUIRE(request->get_timestamp() == from_time_t(500));
-    REQUIRE(request->get_limit() == SnapshotLimit::FromHead(10));
-    request->set_result({});
-  }, "test_cached_specific_count_loading_next_at_end_no_data_cached");
 }
 
 TEST_CASE("test_cached_specific_count_loading_previous_completely_cached",
@@ -658,7 +640,7 @@ TEST_CASE("test_cached_specific_count_loading_previous_completely_cached",
   run_test([] {
     auto test_model = std::make_shared<TestOrderImbalanceIndicatorModel>();
     auto cached_model = CachedOrderImbalanceIndicatorModel(test_model);
-    auto promise1 = cached_model.load(S, from_time_t(600),
+    auto promise1 = cached_model.load(S, from_time_t(500),
       SnapshotLimit::FromTail(5));
     wait(test_model->pop_load())->set_result({A, B, C, D, E});
     wait(std::move(promise1));
@@ -673,7 +655,7 @@ TEST_CASE("test_cached_specific_count_loading_previous",
     "[CachedOrderImbalanceIndicatorModel]") {
   run_test([] {
     auto model = CachedOrderImbalanceIndicatorModel(limit_tests_model());
-    auto promise = model.load(S, from_time_t(500),
+    auto promise = model.load(S, from_time_t(400),
       SnapshotLimit::FromTail(3));
     auto data = wait(std::move(promise));
     REQUIRE(data == std::vector<OrderImbalance>({A2, A3, A4}));
@@ -685,7 +667,7 @@ TEST_CASE("test_cached_specific_count_loading_previous_cached",
   run_test([] {
     auto test_model = std::make_shared<TestOrderImbalanceIndicatorModel>();
     auto cached_model = CachedOrderImbalanceIndicatorModel(test_model);
-    auto promise1 = cached_model.load(S, from_time_t(600),
+    auto promise1 = cached_model.load(S, from_time_t(500),
       SnapshotLimit::FromTail(3));
     wait(test_model->pop_load())->set_result({C, D, E});
     wait(std::move(promise1));
@@ -705,7 +687,7 @@ TEST_CASE("test_cached_specific_count_loading_previous_at_start",
     auto promise = model.load(S, from_time_t(300),
       SnapshotLimit::FromTail(10));
     auto data = wait(std::move(promise));
-    REQUIRE(data == std::vector<OrderImbalance>({A1, A2}));
+    REQUIRE(data == std::vector<OrderImbalance>({A1, A2, A3}));
   }, "test_cached_specific_count_loading_previous_at_start");
 }
 
@@ -714,7 +696,7 @@ TEST_CASE("test_cached_specific_count_loading_previous_at_start_cached",
   run_test([] {
     auto test_model = std::make_shared<TestOrderImbalanceIndicatorModel>();
     auto cached_model = CachedOrderImbalanceIndicatorModel(test_model);
-    auto promise1 = cached_model.load(S, from_time_t(600),
+    auto promise1 = cached_model.load(S, from_time_t(500),
       SnapshotLimit::FromTail(4));
     wait(test_model->pop_load())->set_result({B, C, D, E});
     wait(std::move(promise1));
@@ -722,7 +704,7 @@ TEST_CASE("test_cached_specific_count_loading_previous_at_start_cached",
       SnapshotLimit::FromTail(10));
     auto request = wait(test_model->pop_load());
     REQUIRE(request->get_timestamp() == from_time_t(200));
-    REQUIRE(request->get_limit() == SnapshotLimit::FromTail(9));
+    REQUIRE(request->get_limit() == SnapshotLimit::FromTail(8));
     request->set_result({});
   }, "test_cached_specific_count_loading_previous_at_start_cached");
 }
@@ -737,23 +719,4 @@ TEST_CASE(
     auto data = wait(std::move(promise));
     REQUIRE(data == std::vector<OrderImbalance>({}));
   }, "test_cached_specific_count_loading_previous_at_start_no_data");
-}
-
-TEST_CASE(
-    "test_cached_specific_count_loading_previous_at_start_no_data_cached",
-    "[CachedOrderImbalanceIndicatorModel]") {
-  run_test([] {
-    auto test_model = std::make_shared<TestOrderImbalanceIndicatorModel>();
-    auto cached_model = CachedOrderImbalanceIndicatorModel(test_model);
-    auto promise1 = cached_model.load(S, from_time_t(600),
-      SnapshotLimit::FromTail(5));
-    wait(test_model->pop_load())->set_result({A, B, C, D, E});
-    wait(std::move(promise1));
-    auto promise2 = cached_model.load(S, from_time_t(100),
-      SnapshotLimit::FromTail(10));
-    auto request = wait(test_model->pop_load());
-    REQUIRE(request->get_timestamp() == from_time_t(100));
-    REQUIRE(request->get_limit() == SnapshotLimit::FromHead(10));
-    request->set_result({});
-  }, "test_cached_specific_count_loading_previous_at_start_no_data_cached");
 }
