@@ -33,8 +33,6 @@ namespace Spire {
         NOTIONAL_VALUE_COLUMN
       };
 
-      static const auto COLUMN_COUNT = 7;
-
       //! Constructs a default set or properties.
       OrderImbalanceIndicatorProperties();
 
@@ -50,16 +48,6 @@ namespace Spire {
         \param is_visible True if the column is visible, false otherwise.
       */
       void set_column_visible(COLUMN column, bool is_visible);
-
-      //! Sets the security for which the historical imbalance chart will be
-      //! dispalyed.
-      /*
-        \security The security to show the historical imbalance chart for.
-      */
-      void set_displayed_chart(const Nexus::Security& security);
-
-      //! Resets the display status of the historical imbalance chart.
-      void reset_displayed_chart();
   };
 }
 
