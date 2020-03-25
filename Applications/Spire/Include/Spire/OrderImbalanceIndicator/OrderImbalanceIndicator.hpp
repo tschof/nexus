@@ -5,6 +5,7 @@
 namespace Spire {
   class LocalOrderImbalanceIndicatorModel;
   class OrderImbalanceChartModel;
+  class OrderImbalanceIndicatorHeaderView;
   class OrderImbalanceIndicatorModel;
   class OrderImbalanceIndicatorTableView;
 }
