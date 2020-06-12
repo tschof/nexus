@@ -1,6 +1,7 @@
 #ifndef SPIRE_TEST_ORDER_IMBALANCE_INDICATOR_MODEL_HPP
 #define SPIRE_TEST_ORDER_IMBALANCE_INDICATOR_MODEL_HPP
 #include <mutex>
+#include "Beam/SignalHandling/ScopedSlotAdaptor.hpp"
 #include "Spire/OrderImbalanceIndicator/OrderImbalanceIndicatorModel.hpp"
 
 namespace Spire {
@@ -78,6 +79,7 @@ namespace Spire {
       Beam::Threading::Mutex m_mutex;
       Beam::Threading::ConditionVariable m_load_condition;
       std::deque<std::shared_ptr<LoadEntry>> m_load_entries;
+      Beam::SignalHandling::ScopedSlotAdaptor m_slots;
 
       QtPromise<std::vector<Nexus::OrderImbalance>> add_load_entry(
         std::shared_ptr<LoadEntry> load_entry);

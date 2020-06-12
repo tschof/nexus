@@ -1,5 +1,6 @@
 #include "Spire/OrderImbalanceIndicator/CachedOrderImbalanceIndicatorModel.hpp"
 
+using namespace Beam::SignalHandling;
 using namespace boost;
 using namespace boost::icl;
 using namespace boost::posix_time;
@@ -22,9 +23,10 @@ QtPromise<std::vector<OrderImbalance>>
   if(boost::icl::contains(m_intervals, interval)) {
     return m_cache.load(interval);
   }
-  return load_from_model(interval).then([=] (const auto& loaded_imbalances) {
-    return m_cache.load(interval);
-  });
+  return load_from_model(interval).then(m_slots.MakeSlot(
+    [=] (const auto& loaded_imbalances) {
+      return m_cache.load(interval);
+    }));
 }
 
 QtPromise<std::vector<OrderImbalance>>
@@ -33,9 +35,10 @@ QtPromise<std::vector<OrderImbalance>>
   if(boost::icl::contains(m_security_intervals[security], interval)) {
     return m_cache.load(security, interval);
   }
-  return load_from_model(security, interval).then([=] (auto i) {
-    return m_cache.load(security, interval);
-  });
+  return load_from_model(security, interval).then(m_slots.MakeSlot(
+    [=] (auto i) {
+      return m_cache.load(security, interval);
+    }));
 }
 
 SubscriptionResult<optional<Nexus::OrderImbalance>>
@@ -50,9 +53,9 @@ QtPromise<void> CachedOrderImbalanceIndicatorModel::load_from_model(
   auto promises = std::vector<QtPromise<void>>();
   for(auto& interval : unloaded_intervals) {
     auto promise = m_source_model->load(TimeInterval::closed(interval.lower(),
-      interval.upper())).then([=] (auto& imbalances) {
+      interval.upper())).then(m_slots.MakeSlot([=] (auto& imbalances) {
         on_imbalances_loaded(interval, imbalances.Get());
-      });
+      }));
     promises.push_back(std::move(promise));
   }
   return all(std::move(promises));
@@ -66,9 +69,9 @@ QtPromise<void> CachedOrderImbalanceIndicatorModel::load_from_model(
   for(const auto& interval : unloaded_intervals) {
     auto promise = m_source_model->load(security,
       TimeInterval::closed(interval.lower(), interval.upper())).then(
-      [=] (const auto& imbalances) {
+      m_slots.MakeSlot([=] (const auto& imbalances) {
         on_imbalances_loaded(security, interval, imbalances.Get());
-      });
+      }));
     promises.push_back(std::move(promise));
   }
   return all(std::move(promises));

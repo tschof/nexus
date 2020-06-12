@@ -1,6 +1,7 @@
 #ifndef SPIRE_CACHED_ORDER_IMBALANCE_INDICATOR_MODEL_HPP
 #define SPIRE_CACHED_ORDER_IMBALANCE_INDICATOR_MODEL_HPP
 #include <boost/icl/interval_set.hpp>
+#include "Beam/SignalHandling/ScopedSlotAdaptor.hpp"
 #include "Spire/OrderImbalanceIndicator/LocalOrderImbalanceIndicatorModel.hpp"
 #include "Spire/OrderImbalanceIndicator/OrderImbalanceIndicatorModel.hpp"
 
@@ -39,6 +40,7 @@ namespace Spire {
         m_security_intervals;
       boost::signals2::scoped_connection m_subscription_connection;
       QtPromise<boost::optional<Nexus::OrderImbalance>> m_subscription_promise;
+      Beam::SignalHandling::ScopedSlotAdaptor m_slots;
 
       QtPromise<void> load_from_model(const TimeInterval& interval);
       QtPromise<void> load_from_model(const Nexus::Security& security,

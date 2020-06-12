@@ -1,5 +1,6 @@
 #include "Spire/SpireTester/TestOrderImbalanceIndicatorModel.hpp"
 
+using namespace Beam::SignalHandling;
 using namespace Nexus;
 using namespace Spire;
 
@@ -53,14 +54,14 @@ QtPromise<std::vector<Nexus::OrderImbalance>>
 SubscriptionResult<boost::optional<Nexus::OrderImbalance>>
     TestOrderImbalanceIndicatorModel::subscribe(
     const OrderImbalanceSignal::slot_type& slot) {
-  return {boost::signals2::connection(), QtPromise([] {
+  return {boost::signals2::connection(), QtPromise(m_slots.MakeSlot([] {
     return boost::optional<OrderImbalance>();
-  })};
+  }))};
 }
 
 QtPromise<std::shared_ptr<TestOrderImbalanceIndicatorModel::LoadEntry>>
     TestOrderImbalanceIndicatorModel::pop_load() {
-  return QtPromise([=] {
+  return QtPromise(m_slots.MakeSlot([=] {
     auto lock = std::unique_lock(m_mutex);
     while(m_load_entries.empty()) {
       m_load_condition.wait(lock);
@@ -68,7 +69,7 @@ QtPromise<std::shared_ptr<TestOrderImbalanceIndicatorModel::LoadEntry>>
     auto entry = m_load_entries.front();
     m_load_entries.pop_front();
     return entry;
-  }, LaunchPolicy::ASYNC);
+  }), LaunchPolicy::ASYNC);
 }
 
 int TestOrderImbalanceIndicatorModel::get_load_entry_count() const {
@@ -83,11 +84,11 @@ QtPromise<std::vector<Nexus::OrderImbalance>>
     m_load_entries.push_back(load_entry);
     m_load_condition.notify_all();
   }
-  return QtPromise([=] {
+  return QtPromise(m_slots.MakeSlot([=] {
     auto lock = std::unique_lock(load_entry->m_mutex);
     while(!load_entry->m_is_loaded) {
       load_entry->m_load_condition.wait(lock);
     }
     return std::move(load_entry->get_result());
-  }, LaunchPolicy::ASYNC);
+  }), LaunchPolicy::ASYNC);
 }
