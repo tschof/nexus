@@ -1,6 +1,7 @@
 #include "Spire/Ui/TimeInputWidget.hpp"
 #include <QEvent>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QRegularExpressionValidator>
 #include "Spire/Spire/Dimensions.hpp"
 
@@ -26,10 +27,37 @@ TimeInputWidget::TimeInputWidget(TimeFormat format, QWidget* parent)
 }
 
 bool TimeInputWidget::eventFilter(QObject* watched, QEvent* event) {
+  auto input_index = std::size_t(layout()->indexOf(findChild<QLineEdit*>(
+      watched->objectName())) / 2);
+  auto input = m_inputs[input_index];
   if(event->type() == QEvent::FocusIn) {
     set_focused_style();
   } else if(event->type() == QEvent::FocusOut) {
+    input.m_input->setText(clamped_value(QString::number(
+      input.m_last_valid_value), input.m_min_value, input.m_max_value));
     set_unfocused_style();
+  } else if(event->type() == QEvent::KeyPress) {
+    auto e = static_cast<QKeyEvent*>(event);
+    if(e->key() == Qt::Key_Up || e->key() == Qt::Key_Down) {
+      if(input.m_input->text().isEmpty()) {
+        input.m_input->setText(QString::number(0));
+      }
+      input.m_input->setText(get_input_value(input.m_input->text(),
+        e->key(), input.m_min_value, input.m_max_value));
+    } else if(e->key() == Qt::Key_Right &&
+        input.m_input->cursorPosition() ==
+        input.m_input->text().count() && input_index < (m_inputs.size() - 1)) {
+      m_inputs[input_index + 1].m_input->setFocus();
+      m_inputs[input_index + 1].m_input->setCursorPosition(0);
+    } else if(e->key() == Qt::Key_Left && input.m_input->cursorPosition() == 0
+        && input_index > 0) {
+      m_inputs[input_index - 1].m_input->setFocus();
+    }
+  } else if(event->type() == QEvent::KeyRelease) {
+    auto e = static_cast<QKeyEvent*>(event);
+    if(e->key() >= Qt::Key_0 && e->key() <= Qt::Key_9) {
+      
+    }
   }
   return QWidget::eventFilter(watched, event);
 }
@@ -63,6 +91,8 @@ void TimeInputWidget::add_input(const QString& text,
     Qt::AlignmentFlag alignment, const QRegularExpression& regex,
     int min_value, int max_value) {
   auto input = new QLineEdit(text, this);
+  input->setObjectName(QString("time_input_widget_input_%1").arg(
+    m_inputs.size()));
   input->setAlignment(alignment);
   input->installEventFilter(this);
   layout()->addWidget(input);
