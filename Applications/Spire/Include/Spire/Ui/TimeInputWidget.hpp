@@ -57,13 +57,22 @@ namespace Spire {
       QLineEdit* m_minute_input;
       QLineEdit* m_second_input;
       std::vector<ColonWidget*> m_colon_widgets;
+      int m_last_valid_hour;
+      int m_last_valid_minute;
+      int m_last_valid_second;
 
       void apply_border(QLineEdit* input, const QString& css_selector,
         const QColor& color);
       void apply_style(QLineEdit* input, const QColor& color);
+      QString clamped_value(const QString& text, int min_value, int max_value);
+      QString clamped_value(const QString& text, int min_value, int max_value,
+        int addend);
+      QString get_input_value(const QString& text, int key, int min_value,
+        int max_value);
       void set_focused_style();
       void set_style(const QColor& color);
       void set_unfocused_style();
+      void on_time_changed();
   };
 }
 
