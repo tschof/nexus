@@ -20,15 +20,22 @@ namespace Spire {
       using TimeSignal =
         Signal<void (const boost::posix_time::time_duration& time)>;
 
+      //! Represents a time format used by the TimeInputWidget.
+      enum class TimeFormat {
+
+        //! Represents the HH:MM time format.
+        HM,
+
+        //! Represents the HH:MM:SS time format.
+        HMS
+      };
+
       //! Constructs a TimeInputWidget.
       /*!
-        \param sections Dictates the number of sections to display, using the
-                        provided regular expression to limit the values that
-                        can be entered into that section.
+        \param format The time format to display.
         \param parent The parent widget.
       */
-      explicit TimeInputWidget(const std::vector<QRegularExpression>& sections,
-        QWidget* parent = nullptr);
+      explicit TimeInputWidget(TimeFormat format, QWidget* parent = nullptr);
 
       //! Sets the widget's time.
       /*!
@@ -45,9 +52,15 @@ namespace Spire {
 
     private:
       mutable TimeSignal m_time_signal;
-      std::vector<QLineEdit*> m_time_inputs;
+      TimeFormat m_time_format;
+      QLineEdit* m_hour_input;
+      QLineEdit* m_minute_input;
+      QLineEdit* m_second_input;
       std::vector<ColonWidget*> m_colon_widgets;
 
+      void apply_border(QLineEdit* input, const QString& css_selector,
+        const QColor& color);
+      void apply_style(QLineEdit* input, const QColor& color);
       void set_focused_style();
       void set_style(const QColor& color);
       void set_unfocused_style();
