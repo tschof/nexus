@@ -51,16 +51,21 @@ namespace Spire {
       bool eventFilter(QObject* watched, QEvent* event) override;
 
     private:
+      struct TimeInput {
+        QLineEdit* m_input;
+        int m_last_valid_value;
+        const int m_min_value;
+        const int m_max_value;
+      };
+
       mutable TimeSignal m_time_signal;
       TimeFormat m_time_format;
-      QLineEdit* m_hour_input;
-      QLineEdit* m_minute_input;
-      QLineEdit* m_second_input;
+      std::vector<TimeInput> m_inputs;
       std::vector<ColonWidget*> m_colon_widgets;
-      int m_last_valid_hour;
-      int m_last_valid_minute;
-      int m_last_valid_second;
 
+      void add_colon_widget();
+      void add_input(const QString& text, Qt::AlignmentFlag alignment,
+        const QRegularExpression& regex, int min_value, int max_value);
       void apply_border(QLineEdit* input, const QString& css_selector,
         const QColor& color);
       void apply_style(QLineEdit* input, const QColor& color);
@@ -69,6 +74,7 @@ namespace Spire {
         int addend);
       QString get_input_value(const QString& text, int key, int min_value,
         int max_value);
+      void resize_inputs();
       void set_focused_style();
       void set_style(const QColor& color);
       void set_unfocused_style();
