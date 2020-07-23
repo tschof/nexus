@@ -28,5 +28,5 @@ void ColonWidget::paintEvent(QPaintEvent* event) {
   font.setPixelSize(scale_height(12));
   painter.setFont(font);
   painter.setPen(Qt::black);
-  painter.drawText(QPoint(0, scale_height(17)), ":");
+  painter.drawText(QPoint(0, scale_height(16)), ":");
 }
