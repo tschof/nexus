@@ -36,6 +36,7 @@ bool TimeInputWidget::eventFilter(QObject* watched, QEvent* event) {
     input.m_input->setText(clamped_value(QString::number(
       input.m_last_valid_value), input.m_min_value, input.m_max_value));
     set_unfocused_style();
+    on_time_modified();
   } else if(event->type() == QEvent::KeyPress) {
     auto e = static_cast<QKeyEvent*>(event);
     if(e->key() == Qt::Key_Up || e->key() == Qt::Key_Down) {
@@ -44,6 +45,7 @@ bool TimeInputWidget::eventFilter(QObject* watched, QEvent* event) {
       }
       input.m_input->setText(get_input_value(input.m_input->text(),
         e->key(), input.m_min_value, input.m_max_value));
+      on_time_modified();
     } else if(e->key() == Qt::Key_Right &&
         input.m_input->cursorPosition() ==
         input.m_input->text().count() && input_index < (m_inputs.size() - 1)) {
@@ -94,6 +96,8 @@ void TimeInputWidget::add_input(const QString& text,
   input->setObjectName(QString("time_input_widget_input_%1").arg(
     m_inputs.size()));
   input->setAlignment(alignment);
+  connect(input, &QLineEdit::textEdited, this,
+    &TimeInputWidget::on_time_modified);
   input->installEventFilter(this);
   layout()->addWidget(input);
   m_inputs.emplace_back(TimeInput{input, 0, min_value, max_value});
@@ -185,23 +189,20 @@ void TimeInputWidget::set_unfocused_style() {
   }
 }
 
-void TimeInputWidget::on_time_changed() {
-  //auto hour_ok = false;
-  //auto minute_ok = false;
-  //auto hour = m_hour_input->text().toInt(&hour_ok);
-  //auto minute = m_minute_input->text().toInt(&minute_ok);
-  //if(hour_ok && minute_ok) {
-  //  m_last_valid_hour = hour;
-  //  m_last_valid_minute = minute;
-  //  if(m_time_format == TimeFormat::HM) {
-  //    m_time_signal(hours(hour) + minutes(minute));
-  //    return;
-  //  }
-  //  auto second_ok = false;
-  //  auto second = m_second_input->text().toInt(&second_ok);
-  //  if(second_ok) {
-  //    m_last_valid_second = second;
-  //    m_time_signal(hours(hour) + minutes(minute) + seconds(second));
-  //  }
-  //}
+void TimeInputWidget::on_time_modified() {
+  for(auto& input : m_inputs) {
+    auto ok = false;
+    auto value = input.m_input->text().toInt(&ok);
+    if(!ok) {
+      return;
+    }
+    input.m_last_valid_value = value;
+  }
+  if(m_time_format == TimeFormat::HM) {
+    return m_time_signal({hours(m_inputs[0].m_input->text().toInt()) +
+      minutes(m_inputs[1].m_input->text().toInt())});
+  }
+  return m_time_signal({hours(m_inputs[0].m_input->text().toInt()) +
+    minutes(m_inputs[1].m_input->text().toInt()) +
+    seconds(m_inputs[2].m_input->text().toInt())});
 }

@@ -78,7 +78,7 @@ namespace Spire {
       void set_focused_style();
       void set_style(const QColor& color);
       void set_unfocused_style();
-      void on_time_changed();
+      void on_time_modified();
   };
 }
 
