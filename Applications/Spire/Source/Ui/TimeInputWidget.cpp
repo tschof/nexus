@@ -106,10 +106,9 @@ void TimeInputWidget::add_input(const QString& text,
 void TimeInputWidget::apply_border(QLineEdit* input,
     const QString& css_selector, const QColor& color) {
   input->setStyleSheet(input->styleSheet() + QString(R"(
-      QLineEdit {
-        %3: %1px solid %2;
-      }
-    )").arg(scale_width(1)).arg(color.name()).arg(css_selector));
+    QLineEdit {
+      %3: %1px solid %2;
+    })").arg(scale_width(1)).arg(color.name()).arg(css_selector));
 }
 
 void TimeInputWidget::apply_style(QLineEdit* input, const QColor& color) {
